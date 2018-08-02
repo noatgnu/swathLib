@@ -175,6 +175,7 @@ def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, Ytype=
         str_seq = parser.tostring(temp, False)
         for m in range(ion_maxcharge):
             if "Y" in ion_type:
+
                 yield Ion(seq=temp, charge=m+1, ion_type="Y", mz=mass.fast_mass2(str_seq, charge=m +1, aa_mass=aa_mass, labels=labels), fragment_number=int(Ytype[1:])+1)
     if "b" in ion_type or "y" in ion_type:
         for s in range(seq_len):
@@ -267,7 +268,11 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
                                    ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
                                    '', '', '',
                                    '',)
-                            unique = (row[0], row[1], row[2], row[3],row[6],row[7],row[8],row[9],)
+                            unique = (row[0], row[1], row[2], row[3],
+                                      row[6],
+                                      # row[7],
+                                      # row[8],row[9],
+                                      )
                             if unique not in query_unique:
                                 query_unique.add(unique)
                                 result.append({'row': row})
@@ -310,7 +315,9 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
                                ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
                                '',
                                '', '', '')
-                        unique = (row[0], row[1], row[2], row[3], row[6], row[7], row[8], row[9],)
+                        unique = (row[0], row[1], row[2], row[3], row[6], row[7],
+                                  # row[8], row[9],
+                                  )
                         if unique not in query_unique:
                             query_unique.add(unique)
                             result.append({'row': row})
@@ -357,18 +364,31 @@ class SwathLibHandler(BaseHandler):
 
     @gen.coroutine
     def put(self, *args, **kwargs):
+        result = [dict(row=columns)]
         data = escape.json_decode(self.request.body)
-        # print(data)
-        modifications = dict(static=[], variable=[], Ytype=[])
+        query_unique = set()
+        run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]), query_unique, ignore=[])
+        result += run_result
+        if data['_by_run']:
+            data['_protein']['_ion_type'] = 'by'
+            ms = copy.deepcopy(modifications['static'])
+            tempresult, query_unique = fragmenting(data, {}, ms, [], query_unique)
+            result += tempresult
+        print("Finished. " + data['_protein']['_sequence'] +' '+ str(len(result)))
+        self.write(dict(data=result))
+
+    def run(self, data, modifications, query_unique, ignore):
+        run_result = []
         for i in data['_modifications']:
             if i['type'] not in modifications:
                 modifications[i['type']] = []
-            modifications[i['type']].append(i)
+            if i['type'] not in ignore:
+                modifications[i['type']].append(i)
         if not data['_rt']:
             data['_rt'] = [10]
-        result = [dict(row=columns)]
-        query_unique = set()
+        print(modifications)
         for rec in recursive_resolve_conflict(data["_conflict"]):
+            print(rec)
             comod = modifications['variable'][:]
             if len(rec) > 0:
                 for r in rec:
@@ -398,8 +418,9 @@ class SwathLibHandler(BaseHandler):
                     ms = copy.deepcopy(modifications['static'])
                     mv = processed[:]
                     mv.append(dict(y))
-                    tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique, unique_q3[y['name']],y['Ytype'])
-                    result += tempresult
+                    tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique, unique_q3[y['name']],
+                                                           y['Ytype'])
+                    run_result += tempresult
 
                 # print(unique_q3)
                 if '_oxonium' in data:
@@ -407,20 +428,21 @@ class SwathLibHandler(BaseHandler):
                         for i in unique_q3[k]:
                             fragnum = maxY[k] + 1
                             for o in data['_oxonium']:
-                                result.append({'row': [i[3], '%.2f' % o['mz'], str(i[2]), data['_protein']['_id'], "", 1,
-                                                           data['_protein']["_sequence"], i[1], 2, 'Y', '1',
-                                                           fragnum+1, str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE',
-                                                           1, '',
-                                                           '', '', '']})
+                                run_result.append(
+                                    {'row': [i[3], '%.2f' % o['mz'], str(i[2]), data['_protein']['_id'], "", 1,
+                                             data['_protein']["_sequence"], i[1], 2, 'Y', '1',
+                                             fragnum + 1, str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
+                                             'FALSE',
+                                             1, '',
+                                             '', '', '']})
                                 fragnum += 1
 
             else:
                 ms = copy.deepcopy(modifications['static'])
                 mv = processed[:]
                 tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique)
-                result += tempresult
-        print("Finished. " + data['_protein']['_sequence'] +' '+ str(len(result)))
-        self.write(dict(data=result))
+                run_result += tempresult
+        return run_result, query_unique, modifications
 
 
 columns = ['Q1','Q3', 'RT_detected', 'protein_name', 'isotype', 'relative_intensity', 'stripped_sequence',
