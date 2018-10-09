@@ -170,41 +170,57 @@ def read_windows(path):
 
         return [(int(i["start"])+int(i["end"]))/2 for i in reader]
 
-def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, Ytype=None, y_stop_at=-1, b_stop_at=-1):
+def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variable_mods, Ytype=None, y_stop_at=-1, b_stop_at=-1, by_static=False):
     if Ytype:
-        str_seq = parser.tostring(temp, False)
-        for m in range(ion_maxcharge):
-            if "Y" in ion_type:
-
-                yield Ion(seq=temp, charge=m+1, ion_type="Y", mz=mass.fast_mass2(str_seq, charge=m +1, aa_mass=aa_mass, labels=labels), fragment_number=int(Ytype[1:])+1)
+        yield from generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp)
+    mass_dict = dict(aa_mass)
+    for i in variable_mods:
+        if i["label"] in mass_dict:
+            mass_dict[i["label"]] = 0
     if "b" in ion_type or "y" in ion_type:
-        for s in range(seq_len):
-            if not (s + 1) == 1:
-                for m in range(ion_maxcharge):
-                    for ion in ion_type:
-                        if ion == "y":
-                            position = seq_len - s - 1
-                            if y_stop_at > -1:
-                                if position <= y_stop_at:
-                                    continue
+        yield from generate_byion(mass_dict, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at)
 
-                            seq = temp[position:]
-                            str_seq = parser.tostring(seq, False)
 
-                            yield Ion(seq = temp, ion_type=ion, charge=m + 1,
-                                      mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
-                                                         labels=labels), fragment_number=s + 1)
-                        elif ion == "b":
-                            position = s + 1
-                            if b_stop_at > -1:
-                                if position > b_stop_at:
-                                    continue
-                            seq = temp[:position]
-                            str_seq = parser.tostring(seq, False)
+def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at):
+    for s in range(seq_len):
+        if not (s + 1) == 1:
+            for m in range(ion_maxcharge):
+                for ion in ion_type:
+                    if ion == "y":
+                        position = seq_len - s - 1
+                        if y_stop_at > -1:
+                            if position <= y_stop_at:
+                                continue
 
-                            yield Ion(seq = temp, ion_type=ion, charge=m + 1,
-                                      mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
-                                                         labels=labels), fragment_number=s + 1)
+                        seq = temp[position:]
+                        str_seq = parser.tostring(seq, False)
+
+                        yield Ion(seq=temp, ion_type=ion, charge=m + 1,
+                                  mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
+                                                     labels=labels), fragment_number=s + 1)
+                    elif ion == "b":
+                        position = s + 1
+                        if position == seq_len:
+                            continue
+                        if b_stop_at > -1:
+                            if position > b_stop_at:
+                                continue
+
+                        seq = temp[:position]
+                        str_seq = parser.tostring(seq, False)
+
+                        yield Ion(seq=temp, ion_type=ion, charge=m + 1,
+                                  mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
+                                                     labels=labels), fragment_number=s + 1)
+
+
+def generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp):
+    str_seq = parser.tostring(temp, False)
+    for m in range(ion_maxcharge):
+        if "Y" in ion_type:
+            yield Ion(seq=temp, charge=m + 1, ion_type="Y",
+                      mz=mass.fast_mass2(str_seq, charge=m + 1, aa_mass=aa_mass, labels=labels),
+                      fragment_number=int(Ytype[1:]) + 1)
 
 
 def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
@@ -212,7 +228,6 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
     seq_len = len(seq)
     result = []
     msMap = {m['label']: m['m_label'] for m in ms}
-
 
     for f in generate_fragments(seq[:], static=ms, variable=mv):
         # print(f)
@@ -222,107 +237,115 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
         variable = ''
 
         for r in i['_rt']:
-            for ion in fragments_by(aa_mass, i['_charge'], i['_protein']['_ion_type'], labels, seq_len, f, Ytype=y, b_stop_at= i['_b_stop_at'], y_stop_at=i['_y_stop_at']):
-                if 50 <= ion.mz <= 1800:
-                    if i['_windows']:
-                        for window in i['_windows']:
-                            w = (window['start'] + window['stop'])/2
-                            precursor_seq = ""
-                            if i['_variable_format'] == 'rt':
-                                variable = str(int(r))
-                            elif i['_variable_format'] == 'windows+rt':
-                                variable = str(int(r))+'.'+str(int(w))
-                            elif i['_variable_format'] == 'windows':
-                                variable = str(int(w))
-                            conflict_labels = set()
-                            for aa in range(seq_len):
-                                if len(f[aa]) > 1:
-                                    # precursor_seq += seq[aa][0] + "[" + str(
-                                    #     int(aa_mass[f[aa][0]])) + "." + str(
-                                    #     int(w)) + "]"
-                                    if f[aa][0] in msMap:
-                                        precursor_seq += seq[aa][0] + "[" + msMap[f[aa][0]] + "]"
-                                    else:
-                                        if aa in rec:
-                                            cl = "[" +('%.4f' % rec[aa]["mass"])+ "]"
-                                            precursor_seq += seq[aa][0] +  cl
-                                            conflict_labels.add(cl)
-                                        else:
-                                            precursor_seq += seq[aa][0] + "[" + variable + "]"
-                                else:
-                                    precursor_seq += seq[aa][0]
-                            if len(mv) == 0:
-                                precursor_seq += "["+variable+"]"
-                            else:
-                                rem_conflict = precursor_seq[:]
-                                if len(conflict_labels)>0:
-                                    for cl in conflict_labels:
-                                        rem_conflict = rem_conflict.replace(cl, "")
-                                if rem_conflict == i['_protein']["_sequence"]:
-                                    precursor_seq += "[" + variable + "]"
-                            if unique_q3 is not None:
-                                pattern = (tuple(f), precursor_seq, r, w)
-                                unique_q3.add(pattern)
-                            row = (w, '%.4f' % ion.mz, str(r), i['_protein']['_id'], "", 1, i['_protein']["_sequence"],
-                                   precursor_seq, 2, ion.ion_type, ion.charge,
-                                   ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
-                                   '', '', '',
-                                   '',)
-                            unique = (row[0], row[1], row[2], row[3],
-                                      row[6],
-                                      # row[7],
-                                      # row[8],row[9],
-                                      )
-                            if unique not in query_unique:
-                                query_unique.add(unique)
-                                result.append({'row': row})
-                    else:
-                        precursor_seq = ""
-                        conflict_labels = set()
-                        for aa in range(seq_len):
-                            if len(f[aa]) > 1:
-                                if i['_variable_format'] == 'rt':
-                                    variable = str(int(r))
-                                elif i['_variable_format'] == 'windows+rt':
-                                    variable = str(int(r)) + '.' + str(int(precursor_mz))
-                                elif i['_variable_format'] == 'windows':
-                                    variable = str(int(precursor_mz))
-                                if f[aa][0] in msMap:
-                                    precursor_seq += seq[aa][0] + "[" + msMap[f[aa][0]] + "]"
-                                else:
-                                    if aa in rec:
-                                        cl = '%.4f' % rec[aa]["mass"]
-                                        precursor_seq += seq[aa][0] + "[" + cl + "]"
-                                        conflict_labels.add(cl)
-                                    else:
-                                        precursor_seq += seq[aa][0] + "[" + variable + "]"
-                            else:
-                                precursor_seq += seq[aa][0]
-                        if len(mv) == 0:
-                            precursor_seq += "[" + variable + "]"
-                        else:
-                            rem_conflict = precursor_seq[:]
-                            if len(conflict_labels) > 0:
-                                for cl in conflict_labels:
-                                    rem_conflict = rem_conflict.replace(cl, "")
-                            if rem_conflict == i['_protein']["_sequence"]:
-                                precursor_seq += "[" + variable + "]"
-                        if unique_q3 is not None:
-                            pattern = (tuple(f), precursor_seq, r, '%.2f' % precursor_mz,)
-                            unique_q3.add(pattern)
-                        row = ('%.2f' % precursor_mz, '%.4f' % ion.mz, str(r), i['_protein']['_id'], "", 1,
-                               i['_protein']["_sequence"], precursor_seq, 2, ion.ion_type, ion.charge,
-                               ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
-                               '',
-                               '', '', '')
-                        unique = (row[0], row[1], row[2], row[3], row[6], row[7],
-                                  # row[8], row[9],
-                                  )
-                        if unique not in query_unique:
-                            query_unique.add(unique)
-                            result.append({'row': row})
+            for ion in fragments_by(aa_mass, i['_charge'], i['_protein']['_ion_type'], labels, seq_len, f, mv, Ytype=y, b_stop_at= i['_b_stop_at'], y_stop_at=i['_y_stop_at'], by_static=i['_by_run']):
+                create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3,
+                           variable)
 
     return result, query_unique
+
+
+def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3, variable):
+    if 50 <= ion.mz <= 1800:
+        if i['_windows']:
+            for window in i['_windows']:
+                w = (window['start'] + window['stop']) / 2
+                precursor_seq = ""
+                if i['_variable_format'] == 'rt':
+                    variable = str(int(r))
+                elif i['_variable_format'] == 'windows+rt':
+                    variable = str(int(r)) + '.' + str(int(w))
+                elif i['_variable_format'] == 'windows':
+                    variable = str(int(w))
+                conflict_labels = set()
+                for aa in range(seq_len):
+                    if len(f[aa]) > 1:
+                        # precursor_seq += seq[aa][0] + "[" + str(
+                        #     int(aa_mass[f[aa][0]])) + "." + str(
+                        #     int(w)) + "]"
+                        if f[aa][0] in msMap:
+                            precursor_seq += seq[aa][0] + "[" + msMap[f[aa][0]] + "]"
+                        else:
+                            if aa in rec:
+                                cl = "[" + ('%.4f' % rec[aa]["mass"]) + "]"
+                                precursor_seq += seq[aa][0] + cl
+                                conflict_labels.add(cl)
+                            else:
+                                precursor_seq += seq[aa][0] + "[" + variable + "]"
+                    else:
+                        precursor_seq += seq[aa][0]
+
+                if len(mv) == 0:
+
+                    precursor_seq += "[" + variable + "]"
+                else:
+                    rem_conflict = precursor_seq[:]
+                    if len(conflict_labels) > 0:
+                        for cl in conflict_labels:
+                            rem_conflict = rem_conflict.replace(cl, "")
+                    if rem_conflict == i['_protein']["_sequence"]:
+                        precursor_seq += "[" + variable + "]"
+                if unique_q3 is not None:
+                    pattern = (tuple(f), precursor_seq, r, w)
+                    unique_q3.add(pattern)
+                row = (w, '%.4f' % ion.mz, str(r), i['_protein']['_id'], "", 1, i['_protein']["_sequence"],
+                       precursor_seq, 2, ion.ion_type, ion.charge,
+                       ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
+                       '', '', '',
+                       '',)
+                unique = (row[0], row[1], row[2], row[3],
+                          row[6],
+                          # row[7],
+                          # row[8],row[9],
+                          )
+                if unique not in query_unique:
+                    query_unique.add(unique)
+                    result.append({'row': row})
+        else:
+            precursor_seq = ""
+            conflict_labels = set()
+            for aa in range(seq_len):
+                if len(f[aa]) > 1:
+                    if i['_variable_format'] == 'rt':
+                        variable = str(int(r))
+                    elif i['_variable_format'] == 'windows+rt':
+                        variable = str(int(r)) + '.' + str(int(precursor_mz))
+                    elif i['_variable_format'] == 'windows':
+                        variable = str(int(precursor_mz))
+                    if f[aa][0] in msMap:
+                        precursor_seq += seq[aa][0] + "[" + msMap[f[aa][0]] + "]"
+                    else:
+                        if aa in rec:
+                            cl = '%.4f' % rec[aa]["mass"]
+                            precursor_seq += seq[aa][0] + "[" + cl + "]"
+                            conflict_labels.add(cl)
+                        else:
+                            precursor_seq += seq[aa][0] + "[" + variable + "]"
+                else:
+                    precursor_seq += seq[aa][0]
+            if len(mv) == 0:
+                precursor_seq += "[" + variable + "]"
+            else:
+                rem_conflict = precursor_seq[:]
+                if len(conflict_labels) > 0:
+                    for cl in conflict_labels:
+                        rem_conflict = rem_conflict.replace(cl, "")
+                if rem_conflict == i['_protein']["_sequence"]:
+                    precursor_seq += "[" + variable + "]"
+            if unique_q3 is not None:
+                pattern = (tuple(f), precursor_seq, r, '%.2f' % precursor_mz,)
+                unique_q3.add(pattern)
+            row = ('%.2f' % precursor_mz, '%.4f' % ion.mz, str(r), i['_protein']['_id'], "", 1,
+                   i['_protein']["_sequence"], precursor_seq, 2, ion.ion_type, ion.charge,
+                   ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
+                   '',
+                   '', '', '')
+            unique = (row[0], row[1], row[2], row[3], row[6], row[7],
+                      # row[8], row[9],
+                      )
+            if unique not in query_unique:
+                query_unique.add(unique)
+                result.append({'row': row})
+
 
 def recursive_resolve_conflict(conflict, result=None):
     if result is None:
@@ -369,11 +392,11 @@ class SwathLibHandler(BaseHandler):
         query_unique = set()
         run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]), query_unique, ignore=[])
         result += run_result
-        if data['_by_run']:
-            data['_protein']['_ion_type'] = 'by'
-            ms = copy.deepcopy(modifications['static'])
-            tempresult, query_unique = fragmenting(data, {}, ms, [], query_unique)
-            result += tempresult
+        # if data['_by_run']:
+        #     data['_protein']['_ion_type'] = 'by'
+        #     ms = copy.deepcopy(modifications['static'])
+        #     tempresult, query_unique = fragmenting(data, {}, ms, [], query_unique)
+        #     result += tempresult
         print("Finished. " + data['_protein']['_sequence'] +' '+ str(len(result)))
         self.write(dict(data=result))
 
@@ -420,18 +443,24 @@ class SwathLibHandler(BaseHandler):
                     mv.append(dict(y))
                     tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique, unique_q3[y['name']],
                                                            y['Ytype'])
-                    run_result += tempresult
+                    if not data['_oxonium_only']:
+                        run_result += tempresult
 
                 # print(unique_q3)
                 if '_oxonium' in data:
                     for k in unique_q3:
                         for i in unique_q3[k]:
                             fragnum = maxY[k] + 1
+                            ion = 'Y'
+                            # fragnum = int(data['_charge'])
+                            if 'b' not in data['_modifications']:
+                                fragnum = 1
+                                ion = 'b'
                             for o in data['_oxonium']:
                                 run_result.append(
-                                    {'row': [i[3], '%.2f' % o['mz'], str(i[2]), data['_protein']['_id'], "", 1,
-                                             data['_protein']["_sequence"], i[1], 2, 'Y', '1',
-                                             fragnum + 1, str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
+                                    {'row': [i[3], '%.4f' % o['mz'], str(i[2]), data['_protein']['_id'], "", 1,
+                                             data['_protein']["_sequence"], i[1], 2, ion, fragnum, '1'
+                                             , str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
                                              'FALSE',
                                              1, '',
                                              '', '', '']})
