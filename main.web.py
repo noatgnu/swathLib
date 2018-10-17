@@ -1,4 +1,3 @@
-from Bio import SeqIO
 import json
 import argparse
 import csv
@@ -138,8 +137,8 @@ def explore(tree, mods_variable, mod=None):
     if tree.end:
         for m in mods_variable[tree.modification]["permutations"]:
             mod[tree.modification] = m
-            print(m)
-            print(mod)
+            # print(m)
+            # print(mod)
             yield mod
     else:
         for p, b in zip(mods_variable[tree.modification]["permutations"], tree.branches):
@@ -173,7 +172,7 @@ def read_windows(path):
 def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variable_mods, Ytype=None, y_stop_at=-1, b_stop_at=-1, by_static=False):
     if Ytype:
         yield from generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp)
-    print(aa_mass, temp)
+    # print(aa_mass, temp)
     # mass_dict = dict(aa_mass)
     # for i in variable_mods:
     #     if i["label"] in mass_dict:
@@ -195,7 +194,7 @@ def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len,
 
                         seq = temp[position:]
                         str_seq = parser.tostring(seq, False)
-                        print(str_seq)
+                        # print(str_seq)
                         yield Ion(seq=temp, ion_type=ion, charge=m + 1,
                                   mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
                                                      labels=labels), fragment_number=s + 1)
@@ -209,7 +208,7 @@ def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len,
 
                         seq = temp[:position]
                         str_seq = parser.tostring(seq, False)
-                        print(str_seq)
+                        # print(str_seq)
                         yield Ion(seq=temp, ion_type=ion, charge=m + 1,
                                   mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
                                                      labels=labels), fragment_number=s + 1)
@@ -400,8 +399,27 @@ class SwathLibHandler(BaseHandler):
         result = [dict(row=columns)]
         data = escape.json_decode(self.request.body)
         query_unique = set()
-        run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]), query_unique, ignore=[])
-        result += run_result
+        print(data)
+        if len(data['_modifications']) > 0:
+            run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]), query_unique, ignore=[])
+            result += run_result
+        else:
+
+            if '_oxonium' in data:
+                for r in data['_rt']:
+                    for window in data['_windows']:
+                        w = (window['start'] + window['stop']) / 2
+                        fragnum = 1
+                        ion = 'b'
+                        for o in data['_oxonium']:
+                            result.append(
+                                {'row': [w, '%.4f' % o['mz'], str(r), data['_protein']['_id'], "", 1,
+                                         data['_protein']["_sequence"], data['_protein']["_sequence"], 2, ion, fragnum, '1'
+                                    , str(r), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
+                                         'FALSE',
+                                         1, '',
+                                         '', '', '']})
+                            fragnum += 1
         # if data['_by_run']:
         #     data['_protein']['_ion_type'] = 'by'
         #     ms = copy.deepcopy(modifications['static'])
@@ -419,7 +437,7 @@ class SwathLibHandler(BaseHandler):
                 modifications[i['type']].append(i)
         if not data['_rt']:
             data['_rt'] = [10]
-        print(modifications)
+        # print(modifications)
         for rec in recursive_resolve_conflict(data["_conflict"]):
             print(rec)
             comod = modifications['variable'][:]
