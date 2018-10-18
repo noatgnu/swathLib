@@ -1,3 +1,4 @@
+from Bio import SeqIO
 import json
 import argparse
 import csv
@@ -137,11 +138,6 @@ def explore(tree, mods_variable, mod=None):
     if tree.end:
         for m in mods_variable[tree.modification]["permutations"]:
             mod[tree.modification] = m
-<<<<<<< HEAD
-=======
-            # print(m)
-            # print(mod)
->>>>>>> 1c69cad29d1d7405a74a56cb57e811fb7377bc87
             yield mod
     else:
         for p, b in zip(mods_variable[tree.modification]["permutations"], tree.branches):
@@ -175,7 +171,6 @@ def read_windows(path):
 def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variable_mods, Ytype=None, y_stop_at=-1, b_stop_at=-1, by_static=False):
     if Ytype:
         yield from generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp)
-<<<<<<< HEAD
     mass_dict = dict(aa_mass)
     if by_static:
         for i in variable_mods:
@@ -183,13 +178,6 @@ def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variab
                 if i["label"] in mass_dict:
                     mass_dict[i["label"]] = 0
 
-=======
-    # print(aa_mass, temp)
-    # mass_dict = dict(aa_mass)
-    # for i in variable_mods:
-    #     if i["label"] in mass_dict:
-    #         mass_dict[i["label"]] = 0
->>>>>>> 1c69cad29d1d7405a74a56cb57e811fb7377bc87
     if "b" in ion_type or "y" in ion_type:
         yield from generate_byion(mass_dict, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at)
 
@@ -417,16 +405,11 @@ class SwathLibHandler(BaseHandler):
             run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]), query_unique, ignore=[])
             result += run_result
         else:
-<<<<<<< HEAD
             if not data['_oxonium_only']:
                 run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]),
                                                                    query_unique, ignore=[])
                 result += run_result
             if '_oxonium' in data and data['_oxonium_only']:
-=======
-
-            if '_oxonium' in data:
->>>>>>> 1c69cad29d1d7405a74a56cb57e811fb7377bc87
                 for r in data['_rt']:
                     for window in data['_windows']:
                         w = (window['start'] + window['stop']) / 2
@@ -458,7 +441,7 @@ class SwathLibHandler(BaseHandler):
                 modifications[i['type']].append(i)
         if not data['_rt']:
             data['_rt'] = [10]
-        # print(modifications)
+        print(modifications)
         for rec in recursive_resolve_conflict(data["_conflict"]):
             print(rec)
             comod = modifications['variable'][:]
