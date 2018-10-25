@@ -418,7 +418,7 @@ class SwathLibHandler(BaseHandler):
                         for o in data['_oxonium']:
                             result.append(
                                 {'row': [w, '%.4f' % o['mz'], str(r), data['_protein']['_id'], "", 1,
-                                         data['_protein']["_sequence"], data['_protein']["_sequence"], 2, ion, fragnum, '1'
+                                         data['_protein']["_sequence"], data['_protein']["_sequence"] + "[" + str(int(w)) + "." + str(int(r)) + "]", 2, ion, fragnum, '1'
                                     , str(r), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
                                          'FALSE',
                                          1, '',
