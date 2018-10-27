@@ -31,10 +31,10 @@ export class HomeComponent implements OnInit {
   OpenConnectorModal() {
     const BrowserWindow = this.electronService.remote.BrowserWindow;
     const win = new BrowserWindow({
-      width: 500,
-      height: 250,
+      width: 700,
+      height: 500,
       center: true,
-      resizable: false,
+      // resizable: false,
       frame: true,
       transparent: false,
     });

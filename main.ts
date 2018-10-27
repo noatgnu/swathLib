@@ -1,11 +1,15 @@
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import * as child_process from 'child_process';
+import {Backend} from "./src/app/helper/backend";
+import {ConnectorUrl} from "./src/app/helper/connector-url";
 
 let win, serve;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
-
+let backend: Backend[] = [new Backend('python', "9000", false, new ConnectorUrl('http://10.89.221.27:9000', false))];
+let localBackend: Backend[] = [];
 function navWin(route) {
   win.webContents.send('nav', route);
 }
@@ -46,6 +50,7 @@ function createWindow() {
     // when you should delete the corresponding element.
     win = null;
   });
+
 }
 
 try {
@@ -62,6 +67,16 @@ try {
     if (process.platform !== 'darwin') {
       app.quit();
     }
+
+  });
+
+  app.on("quit", () => {
+      console.log('App Exiting.');
+      for (const p of localBackend) {
+          if (p.process) {
+              const promise = p.process.kill();
+          }
+      }
   });
 
   app.on('activate', () => {
@@ -71,6 +86,27 @@ try {
       createWindow();
     }
   });
+
+  ipcMain.on('backend-start', function (event, arg) {
+      if (!arg.status) {
+          const programPath = path.resolve(__dirname, 'backend', 'main.web.py');
+          console.log(arg);
+          arg.process = child_process.spawn(arg.pythonPath, ["-u", programPath, "-p", arg.port],{shell: true, detached: true});
+          arg.url = 'http://localhost:' + arg.port;
+          localBackend.push(arg);
+          arg.process.on('close', () => {
+              event.sender.send('backend-close', arg);
+          });
+      }
+  });
+
+    ipcMain.on('backend-update', (event, args) => {
+        backend = args;
+    });
+
+    ipcMain.on('backend-get', (event, args) => {
+       event.sender.send('reply-backend-get', backend);
+    });
 
 } catch (e) {
   // Catch Error

@@ -1,23 +1,68 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Subject} from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 import {ConnectorUrl} from './connector-url';
+import {ElectronService} from "../providers/electron.service";
+import {Backend} from "./backend";
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConnectorService {
-  urls = [new ConnectorUrl('http://10.89.221.27:9000', false)];
+  urls = [
+      new Backend('python', "9000", false, new ConnectorUrl('http://10.89.221.27:9000', false))
+  ];
   previousUrlIndex = -1;
   connectMap = new Map<string, boolean>();
   private connectorModal = new Subject<boolean>();
   connectorModalSignal = this.connectorModal.asObservable();
-  constructor(private http: HttpClient) { }
+  private connectorSource = new BehaviorSubject<Backend[]>(this.urls);
+  connectorSourceReader = this.connectorSource.asObservable();
 
-  UpdateURLs(urls: ConnectorUrl[]) {
-    this.urls = urls;
+    urlStatusMap: Map<string, ConnectorUrl> = new Map<string, ConnectorUrl>();
+  constructor(private http: HttpClient, private electron: ElectronService) {
+      this.GetBaseURL();
+
+      this.electron.ipcRenderer.on('reply-backend-get', (event, args) => {
+          this.urlStatusMap = new Map<string, ConnectorUrl>();
+
+          if (args.length > 0) {
+              for (let i = 0; i < args.length; i ++) {
+                  this.urlStatusMap.set(args[i].url.url, args[i].url);
+              }
+              for (let i = 0; i < args.length; i ++) {
+                  this.checkUrl(args[i].url)
+              }
+              this.urls = args;
+              this.UpdateConnectorSource(args);
+          }
+      });
   }
+
+  GetBaseURL() {
+      this.electron.ipcRenderer.send('backend-get', true);
+  }
+
+  UpdateURLs(urls: Backend[]) {
+    this.urls = urls;
+    this.electron.ipcRenderer.send('backend-update', urls);
+    console.log(this.urls);
+  }
+
+  UpdateConnectorSource(data) {
+      this.connectorSource.next(data);
+  }
+    checkUrl(u: ConnectorUrl) {
+        if (!this.urlStatusMap.has(u.url)) {
+            this.urlStatusMap.set(u.url, u);
+        }
+        this.CheckURL(u.url).subscribe((resp) => {
+            this.urlStatusMap.get(u.url).status = resp['status'] === 200;
+        }, (err) => {
+            this.urlStatusMap.get(u.url).status = false;
+        });
+    }
 
   CheckURL(u: string) {
     console.log(u);

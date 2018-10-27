@@ -1,13 +1,13 @@
-from Bio import SeqIO
-import json
-import argparse
 import csv
 from pyteomics import parser, mass
 import itertools
 import re
 import copy
 from tornado import web, gen, ioloop, escape
-import settingmain
+from tornado.options import define, options
+
+define("p", default="9000", help="Backend Listening Port")
+
 
 def prepare_libraries(sequence, **kwargs):
     kw = ("static", "variable", "Ytype")
@@ -32,10 +32,11 @@ def prepare_libraries(sequence, **kwargs):
 
     return labels, mod_mass, parser.parse(sequence, labels=labels, split=True)
 
+
 def generate_fragments(parsed_seq, **kwargs):
     if "static" in kwargs:
         for m in range(len(kwargs["static"])):
-            if len(kwargs["static"][m]["positions"])>0:
+            if len(kwargs["static"][m]["positions"]) > 0:
                 for position in kwargs["static"][m]["positions"]:
                     parsed_seq[position] = (kwargs["static"][m]["label"],) + parsed_seq[position]
     if "variable" in kwargs:
@@ -47,11 +48,12 @@ def generate_fragments(parsed_seq, **kwargs):
     else:
         yield parsed_seq
 
+
 def _generate_permutation(mods_variable):
     permutation_mods = []
     for m in range(len(mods_variable)):
         if "positions" in mods_variable[m]:
-            if len(mods_variable[m]["positions"])>0:
+            if len(mods_variable[m]["positions"]) > 0:
                 composite = list()
                 l = len(mods_variable[m]["positions"])
                 mod_amount = 1
@@ -60,15 +62,15 @@ def _generate_permutation(mods_variable):
                         mod_amount = l
                 if mods_variable[m]["Ytype"] != "":
                     com = []
-                    for i in range(l-mod_amount):
+                    for i in range(l - mod_amount):
                         com.append(("x",))
                     for i in range(mod_amount):
                         com.append((mods_variable[m]["label"], "x"))
-                    if l >1:
+                    if l > 1:
                         composite = list(itertools.combinations(
-                        com, l))
+                            com, l))
                     else:
-                        #composite = list(itertools.combinations(
+                        # composite = list(itertools.combinations(
                         #    [("x",), (mods_variable[m]["label"], "x")], 1))
                         composite = [((mods_variable[m]["label"], 'x'),)]
 
@@ -84,8 +86,8 @@ def _generate_permutation(mods_variable):
                         composite += list(itertools.combinations(com, l))
                     else:
                         composite = list(itertools.combinations_with_replacement(
-                        [("x",), (mods_variable[m]["label"], "x")],
-                        len(mods_variable[m]["positions"])))
+                            [("x",), (mods_variable[m]["label"], "x")],
+                            len(mods_variable[m]["positions"])))
                 print(composite)
                 if "permutations" not in mods_variable[m]:
                     mods_variable[m]["permutations"] = set()
@@ -100,12 +102,14 @@ def _generate_permutation(mods_variable):
                 permutation_mods.append(m)
 
     for m in range(len(permutation_mods)):
-        if (m+1) < len(permutation_mods):
-            mods_variable[permutation_mods[m]]["tree"] = Tree(permutation_mods[m], [permutation_mods[m+1]]*len(mods_variable[m]["permutations"]))
+        if (m + 1) < len(permutation_mods):
+            mods_variable[permutation_mods[m]]["tree"] = Tree(permutation_mods[m], [permutation_mods[m + 1]] * len(
+                mods_variable[m]["permutations"]))
         else:
             mods_variable[permutation_mods[m]]["tree"] = Tree(permutation_mods[m], end=True)
 
     return explore(mods_variable[permutation_mods[0]]["tree"], mods_variable)
+
 
 def make_modded_sequence(parsed_seq, mod_lib, mods_variable):
     seq = parsed_seq[:]
@@ -122,8 +126,8 @@ def make_modded_sequence(parsed_seq, mod_lib, mods_variable):
                 if len(mod) > 1:
                     seq[position] = (mod[0],) + seq[position]
 
-
     return seq
+
 
 class Tree:
     def __init__(self, modification=None, branches=None, end=False):
@@ -144,6 +148,7 @@ def explore(tree, mods_variable, mod=None):
             mod[tree.modification] = p
             yield from explore(mods_variable[b]["tree"], mods_variable, mod)
 
+
 def read_mod_input(path: str) -> dict:
     mods = {}
     with open(path, 'rt') as infile:
@@ -152,9 +157,11 @@ def read_mod_input(path: str) -> dict:
             if i["type"] not in mods:
                 mods[i["type"]] = []
             mods[i["type"]].append(
-                dict(label=i["label"], regex=i["regex"], mass=float(i["mass"]), auto_allocation=i["auto_allocation"], Ytype=i["Ytype"], multiple_pattern = i["multiple_pattern"], name=i["name"], status=i["status"])
-                )
+                dict(label=i["label"], regex=i["regex"], mass=float(i["mass"]), auto_allocation=i["auto_allocation"],
+                     Ytype=i["Ytype"], multiple_pattern=i["multiple_pattern"], name=i["name"], status=i["status"])
+            )
     return mods
+
 
 def read_seq_input(path):
     with open(path, 'rt') as infile:
@@ -162,13 +169,16 @@ def read_seq_input(path):
         for i in reader:
             yield i
 
+
 def read_windows(path):
     with open(path, 'rt') as infile:
         reader = csv.DictReader(infile, dialect="excel-tab")
 
-        return [(int(i["start"])+int(i["end"]))/2 for i in reader]
+        return [(int(i["start"]) + int(i["end"])) / 2 for i in reader]
 
-def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variable_mods, Ytype=None, y_stop_at=-1, b_stop_at=-1, by_static=False):
+
+def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variable_mods, Ytype=None, y_stop_at=-1,
+                 b_stop_at=-1, by_static=False):
     if Ytype:
         yield from generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp)
     mass_dict = dict(aa_mass)
@@ -238,7 +248,8 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
         variable = ''
 
         for r in i['_rt']:
-            for ion in fragments_by(aa_mass, i['_charge'], i['_protein']['_ion_type'], labels, seq_len, f, mv, Ytype=y, b_stop_at= i['_b_stop_at'], y_stop_at=i['_y_stop_at'], by_static=i['_by_run']):
+            for ion in fragments_by(aa_mass, i['_charge'], i['_protein']['_ion_type'], labels, seq_len, f, mv, Ytype=y,
+                                    b_stop_at=i['_b_stop_at'], y_stop_at=i['_y_stop_at'], by_static=i['_by_run']):
                 create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3,
                            variable)
 
@@ -360,16 +371,17 @@ def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result,
 def recursive_resolve_conflict(conflict, result=None):
     if result is None:
         result = dict()
-    if len(conflict)>0:
+    if len(conflict) > 0:
         for i in range(len(conflict)):
             for i2 in conflict[i]["_mods"]:
                 result[conflict[i]["_coordinate"]] = i2
-                if i+1 < len(conflict):
-                    yield from recursive_resolve_conflict(conflict[i+1:], result)
+                if i + 1 < len(conflict):
+                    yield from recursive_resolve_conflict(conflict[i + 1:], result)
                 else:
                     yield result
     else:
         yield result
+
 
 class Ion:
     def __init__(self, **kwargs):
@@ -379,6 +391,7 @@ class Ion:
         self.fragment_number = 1
         for i in kwargs:
             setattr(self, i, kwargs[i])
+
 
 class BaseHandler(web.RequestHandler):
     def set_default_headers(self):
@@ -402,7 +415,8 @@ class SwathLibHandler(BaseHandler):
         query_unique = set()
         print(data)
         if len(data['_modifications']) > 0:
-            run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]), query_unique, ignore=[])
+            run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]),
+                                                               query_unique, ignore=[])
             result += run_result
         else:
             if not data['_oxonium_only']:
@@ -418,7 +432,9 @@ class SwathLibHandler(BaseHandler):
                         for o in data['_oxonium']:
                             result.append(
                                 {'row': [w, '%.4f' % o['mz'], str(r), data['_protein']['_id'], "", 1,
-                                         data['_protein']["_sequence"], data['_protein']["_sequence"] + "[" + str(int(w)) + "." + str(int(r)) + "]", 2, ion, fragnum, '1'
+                                         data['_protein']["_sequence"],
+                                         data['_protein']["_sequence"] + "[" + str(int(w)) + "." + str(int(r)) + "]", 2,
+                                         ion, fragnum, '1'
                                     , str(r), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
                                          'FALSE',
                                          1, '',
@@ -429,7 +445,7 @@ class SwathLibHandler(BaseHandler):
         #     ms = copy.deepcopy(modifications['static'])
         #     tempresult, query_unique = fragmenting(data, {}, ms, [], query_unique)
         #     result += tempresult
-        print("Finished. " + data['_protein']['_sequence'] +' '+ str(len(result)))
+        print("Finished. " + data['_protein']['_sequence'] + ' ' + str(len(result)))
         self.write(dict(data=result))
 
     def run(self, data, modifications, query_unique, ignore):
@@ -492,7 +508,7 @@ class SwathLibHandler(BaseHandler):
                                 run_result.append(
                                     {'row': [i[3], '%.4f' % o['mz'], str(i[2]), data['_protein']['_id'], "", 1,
                                              data['_protein']["_sequence"], i[1], 2, ion, fragnum, '1'
-                                             , str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
+                                        , str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
                                              'FALSE',
                                              1, '',
                                              '', '', '']})
@@ -506,8 +522,9 @@ class SwathLibHandler(BaseHandler):
         return run_result, query_unique, modifications
 
 
-columns = ['Q1','Q3', 'RT_detected', 'protein_name', 'isotype', 'relative_intensity', 'stripped_sequence',
-           'modification_sequence', 'prec_z', 'frg_type', 'frg_z', 'frg_nr', 'iRT', 'uniprot_id', 'score', 'decoy', 'prec_y',
+columns = ['Q1', 'Q3', 'RT_detected', 'protein_name', 'isotype', 'relative_intensity', 'stripped_sequence',
+           'modification_sequence', 'prec_z', 'frg_type', 'frg_z', 'frg_nr', 'iRT', 'uniprot_id', 'score', 'decoy',
+           'prec_y',
            'confidence', 'shared', 'N', 'rank', 'mods', 'nterm', 'cterm']
 
 settings = {
@@ -519,5 +536,7 @@ if __name__ == "__main__":
     application = web.Application([
         (r"/api/swathlib/upload/", SwathLibHandler),
     ], **settings)
-    application.listen(9000)
+    application.listen(options.p)
+    print("Currently running at http://localhost:" + str(options.p))
     ioloop.IOLoop.current().start()
+

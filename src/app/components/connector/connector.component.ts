@@ -3,6 +3,8 @@ import {ConnectorService} from '../../helper/connector.service';
 import {Observable, Subscription} from 'rxjs';
 import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {ConnectorUrl} from '../../helper/connector-url';
+import {ElectronService} from "../../providers/electron.service";
+import {Backend} from "../../helper/backend";
 
 @Component({
   selector: 'app-connector',
@@ -14,20 +16,27 @@ export class ConnectorComponent implements OnInit, OnDestroy {
   signalSub: Subscription;
   ref: NgbModalRef;
   urls;
-  urlStatusMap: Map<string, ConnectorUrl>;
-  constructor(private connector: ConnectorService, private modal: NgbModal) {
+    urlStatusMap: Map<string, ConnectorUrl> = new Map<string, ConnectorUrl>();
+  localServerSettings = [{pythonPath: 'python', port: "9000", status: false, url: new ConnectorUrl('', false)}];
+  backend;
+  backendObs: Observable<Backend[]>;
+  constructor(private connector: ConnectorService, private electron: ElectronService) {
     this.connectorSignal = this.connector.connectorModalSignal;
     this.urls = this.connector.urls;
+    const ipcRenderer = this.electron.ipcRenderer;
+    this.backendObs = this.connector.connectorSourceReader;
+    ipcRenderer.on('backend-close', (event, arg) => {
+        for (let i = 0; i <= this.localServerSettings.length; i++) {
+            if (this.localServerSettings[i].port === arg.port) {
+                this.localServerSettings[i].status = false;
+            }
+        }
+    });
   }
 
   ngOnInit() {
-    this.urlStatusMap = new Map<string, ConnectorUrl>();
-    for (let i = 0; i < this.urls.length; i ++) {
-      this.urlStatusMap.set(this.urls[i].url, this.urls[i]);
-    }
-    for (const c of this.urls) {
-      this.checkUrl(c);
-    }
+
+
     /*this.signalSub = this.connectorSignal.subscribe((data) => {
       if (data) {
         this.ref = this.modal.open(this.serverConnection);
@@ -57,7 +66,11 @@ export class ConnectorComponent implements OnInit, OnDestroy {
     this.signalSub.unsubscribe();
   }
 
-  SaveUrls() {
-    this.connector.urls = this.urls;
+  SaveUrls(urls) {
+    this.connector.UpdateURLs(urls);
+  }
+
+  StartBackend(backend) {
+      this.electron.ipcRenderer.send('backend-start', backend);
   }
 }

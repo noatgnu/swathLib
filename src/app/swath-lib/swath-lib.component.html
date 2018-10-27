@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container-fluid">
   <ngb-tabset>
     <ngb-tab title="Main">
       <ng-template ngbTabContent>
@@ -155,7 +155,7 @@
   </ngb-tabset>
 </div>
 
-<div class="container" *ngIf="fasta|async; let fasta">
+<div class="container-fluid" *ngIf="fasta|async; let fasta">
   <hr/>
   <app-sequence-selector *ngFor="let p of fasta.content" [protein]="p" [form]="passForm"></app-sequence-selector>
 

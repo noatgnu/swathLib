@@ -1,28 +1,56 @@
 <div class="container-fluid">
-  <h4 class="modal-title">Server Connections</h4>
+  <h5 class="modal-title">Server Connections</h5>
   <hr>
-  <div class="row" *ngFor="let u of urls">
-    <div class="col-8">
+  <div class="row" *ngFor="let s of localServerSettings">
+    <div class="col-6">
       <div class="input-group">
-        <input type="text" class="form-control" [(ngModel)]="u.url">
-        <div class="input-group-append">
-          <div class="input-group-text" *ngIf="u.status === false">
-            <i class="material-icons text-danger" >error</i>
-          </div>
-          <div class="input-group-text" *ngIf="u.status === true">
-            <i class="material-icons text-success" >check_circle</i>
+        <div class="input-group-prepend">
+          <div class="input-group-text">
+            Python Path
           </div>
         </div>
+        <input type="text" class="form-control" [(ngModel)]="s.pythonPath">
       </div>
     </div>
-    <div class="col-2">
-      <button class="btn btn-outline-secondary" type="button" (click)="checkUrl(u)">
-        Reconnect
-      </button>
+    <div class="col-3">
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <div class="input-group-text">
+            Port
+          </div>
+        </div>
+        <input type="text" class="form-control" [(ngModel)]="s.port">
+      </div>
+    </div>
+    <div class="col-3">
+      <button class="btn btn-outline-success" (click)="StartBackend(s)">Start</button>
     </div>
   </div>
-  <div>
-    <button class="btn btn-outline-alert" type="button" (click)="SaveUrls()">Submit</button>
-  </div>
+  <hr>
+    <div *ngIf="backendObs|async; let backends">
+        <div class="row" *ngFor="let u of backends">
+            <div class="col-8">
+                <div class="input-group">
+                    <input type="text" class="form-control" [(ngModel)]="u.url.url">
+                    <div class="input-group-append">
+                        <div class="input-group-text" *ngIf="u.url.status === false">
+                            <i class="material-icons text-danger" >error</i>
+                        </div>
+                        <div class="input-group-text" *ngIf="u.url.status === true">
+                            <i class="material-icons text-success" >check_circle</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-outline-secondary" type="button" (click)="checkUrl(u.url)">
+                    Connect
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <button class="btn btn-outline-alert" type="button" (click)="SaveUrls(backends)">Save</button>
+        </div>
+    </div>
 </div>
 
