@@ -50,6 +50,21 @@ export class ConnectorService {
     console.log(this.urls);
   }
 
+  AddURL(current) {
+      current.push(new Backend('python', "9000", false, new ConnectorUrl('', false)));
+      this.UpdateConnectorSource(current);
+  }
+
+  RemoveURL(toBeRemoved: Backend, current: Backend[]) {
+      const ind = current.indexOf(toBeRemoved);
+      if (current.length === 1) {
+          current[ind].url = new ConnectorUrl('', false);
+      } else {
+          current.splice(ind, 1);
+      }
+      this.UpdateConnectorSource(current);
+  }
+
   UpdateConnectorSource(data) {
       this.connectorSource.next(data);
   }
@@ -66,25 +81,27 @@ export class ConnectorService {
 
   CheckURL(u: string) {
     console.log(u);
+
     return this.http.get(u + '/api/swathlib/upload/', {observe: 'response'});
   }
+
 
   SendModalSignal(data: boolean) {
     this.connectorModal.next(data);
   }
 
   GetURL(checkStatus: boolean = false) {
-    let i = this.previousUrlIndex;
-    while (i > -1 && i < this.urls.length) {
-        i ++;
+
+    while (this.previousUrlIndex >= -1 && this.previousUrlIndex < this.urls.length) {
+        console.log(this.previousUrlIndex);
+        this.previousUrlIndex ++;
+
         if (checkStatus) {
-          if (this.urls[i]) {
-            this.previousUrlIndex = i;
-            return this.urls[i];
+          if (this.urls[this.previousUrlIndex]) {
+            return this.urls[this.previousUrlIndex];
           }
         } else {
-          this.previousUrlIndex = i;
-          return this.urls[i];
+          return this.urls[this.previousUrlIndex];
         }
     }
     this.previousUrlIndex = -1;

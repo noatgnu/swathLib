@@ -2,16 +2,26 @@ import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as child_process from 'child_process';
-import {Backend} from "./src/app/helper/backend";
-import {ConnectorUrl} from "./src/app/helper/connector-url";
+import * as notifier from 'node-notifier';
 
+const appID = 'me.glycoproteo.swathlib';
+const appName = 'SWATHLib';
 let win, serve;
+let windowCollection: BrowserWindow[] = [];
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
-let backend: Backend[] = [new Backend('python', "9000", false, new ConnectorUrl('http://10.89.221.27:9000', false))];
-let localBackend: Backend[] = [];
+let backend = [
+    // new Backend('python', "9000", false, new ConnectorUrl('http://10.89.221.27:9000', false))
+];
+let localBackend = [];
 function navWin(route) {
   win.webContents.send('nav', route);
+}
+
+function createSubWindow(data) {
+    const win = new BrowserWindow(data.options);
+    win.loadURL(data.url);
+    windowCollection.push(win);
 }
 
 function createWindow() {
@@ -50,7 +60,7 @@ function createWindow() {
     // when you should delete the corresponding element.
     win = null;
   });
-
+    windowCollection.push(win)
 }
 
 try {
@@ -95,6 +105,7 @@ try {
           arg.url = 'http://localhost:' + arg.port;
           localBackend.push(arg);
           arg.process.on('close', () => {
+              notifier.notify({title: 'SWATHLib Server Status', message: 'Local server at ' + arg.port + ' has been closed.', appId: appID, appName: appName});
               event.sender.send('backend-close', arg);
           });
       }
@@ -102,10 +113,18 @@ try {
 
     ipcMain.on('backend-update', (event, args) => {
         backend = args;
+        for (const i of windowCollection) {
+            i.webContents.send('reply-backend-get', backend);
+        }
     });
 
     ipcMain.on('backend-get', (event, args) => {
+
        event.sender.send('reply-backend-get', backend);
+    });
+
+    ipcMain.on('window-open', (event, args) => {
+        createSubWindow(args);
     });
 
 } catch (e) {

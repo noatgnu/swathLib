@@ -26,11 +26,12 @@ export class SwathResultService {
         m[key] = m[key];
       }
     }
-    return this.http.put(this.connector.GetURL().url.url + '/api/swathlib/upload/', data, {observe: 'response'});
+    const url = this.connector.GetURL().url.url + '/api/swathlib/upload/';
+    console.log('sending request to ' + url);
+    return this.http.put(url, data, {observe: 'response'});
   }
 
   UpdateSendTrigger(data) {
-      this.connector
     this._sendTrigger.next(data);
   }
 }

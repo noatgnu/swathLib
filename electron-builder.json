@@ -1,5 +1,6 @@
 {
-  "productName": "SWATHLib-Utility",
+    "appId": "me.glycoproteo.swathlib",
+  "productName": "SWATHLib",
   "directories": {
     "output": "release/"
   },

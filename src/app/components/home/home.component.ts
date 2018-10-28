@@ -29,7 +29,8 @@ export class HomeComponent implements OnInit {
   }
 
   OpenConnectorModal() {
-    const BrowserWindow = this.electronService.remote.BrowserWindow;
+      this.electronService.ipcRenderer.send("window-open", {options:{width: 700, height: 500, center: true, frame: true, transparent: false}, url: `file://${__dirname}/index.html#/` + 'connector'});
+/*    const BrowserWindow = this.electronService.remote.BrowserWindow;
     const win = new BrowserWindow({
       width: 700,
       height: 500,
@@ -38,6 +39,7 @@ export class HomeComponent implements OnInit {
       frame: true,
       transparent: false,
     });
-    win.loadURL(`file://${__dirname}/index.html#/` + 'connector');
+    win.loadURL(`file://${__dirname}/index.html#/` + 'connector');*/
+
   }
 }

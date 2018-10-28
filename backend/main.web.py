@@ -538,5 +538,6 @@ if __name__ == "__main__":
     ], **settings)
     application.listen(options.p)
     print("Currently running at http://localhost:" + str(options.p))
+    print("Copy the address into the Server Connections.")
     ioloop.IOLoop.current().start()
 

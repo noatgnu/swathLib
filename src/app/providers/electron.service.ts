@@ -6,6 +6,7 @@ import { ipcRenderer, webFrame, remote } from 'electron';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as notifier from 'node-notifier';
 
 @Injectable()
 export class ElectronService {
@@ -16,6 +17,9 @@ export class ElectronService {
   childProcess: typeof childProcess;
   fs: typeof fs;
   path: typeof path;
+  notifier: typeof notifier;
+  appID = 'me.glycoproteo.swathlib';
+  appName = 'SWATHLib';
 
   constructor() {
     // Conditional imports
@@ -26,12 +30,18 @@ export class ElectronService {
 
       this.childProcess = window.require('child_process');
       this.fs = window.require('fs');
-      this.path = window.require('path')
+      this.path = window.require('path');
+        this.notifier = window.require('node-notifier');
     }
   }
 
   isElectron = () => {
     return window && window.process && window.process.type;
-  }
+  };
 
+  notify(options) {
+      options.appId = this.appID;
+      options.appName = this.appName;
+      this.notifier.notify(options)
+  }
 }

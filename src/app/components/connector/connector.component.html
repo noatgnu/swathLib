@@ -1,8 +1,7 @@
 <div class="container-fluid">
-  <h5 class="modal-title">Server Connections</h5>
-  <hr>
+  <h5>Local Servers</h5>
   <div class="row" *ngFor="let s of localServerSettings">
-    <div class="col-6">
+    <div class="col-7">
       <div class="input-group">
         <div class="input-group-prepend">
           <div class="input-group-text">
@@ -22,16 +21,17 @@
         <input type="text" class="form-control" [(ngModel)]="s.port">
       </div>
     </div>
-    <div class="col-3">
+    <div class="col-1">
       <button class="btn btn-outline-success" (click)="StartBackend(s)">Start</button>
     </div>
   </div>
   <hr>
+    <h5>Server Connections</h5>
     <div *ngIf="backendObs|async; let backends">
-        <div class="row" *ngFor="let u of backends">
+        <div class="row mb-1" *ngFor="let u of backends">
             <div class="col-8">
                 <div class="input-group">
-                    <input type="text" class="form-control" [(ngModel)]="u.url.url">
+                    <input type="text" class="form-control" [(ngModel)]="u.url.url" placeholder="Server URL">
                     <div class="input-group-append">
                         <div class="input-group-text" *ngIf="u.url.status === false">
                             <i class="material-icons text-danger" >error</i>
@@ -42,15 +42,28 @@
                     </div>
                 </div>
             </div>
-            <div class="col-2">
+            <div class="col-3">
                 <button class="btn btn-outline-secondary" type="button" (click)="checkUrl(u.url)">
-                    Connect
+                    Test Connection
+                </button>
+            </div>
+            <div class="col-1">
+                <button class="btn btn-outline-danger" type="button" (click)="RemoveURL(u, backends)">
+                    -
                 </button>
             </div>
         </div>
-        <div class="mt-2">
-            <button class="btn btn-outline-alert" type="button" (click)="SaveUrls(backends)">Save</button>
+        <div class="row mt-2">
+            <div class="col-3">
+                <button class="btn btn-outline-success" type="button" (click)="AddURL(backends)">+</button>
+            </div>
         </div>
+        <div class="row mt-2">
+            <div class="col-3">
+                <button class="btn btn-outline-warning" type="button" (click)="SaveUrls(backends)">Save</button>
+            </div>
+        </div>
+
     </div>
 </div>
 

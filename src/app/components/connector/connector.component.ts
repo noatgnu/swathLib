@@ -56,10 +56,20 @@ export class ConnectorComponent implements OnInit, OnDestroy {
       this.urlStatusMap.set(u.url, u);
     }
     this.connector.CheckURL(u.url).subscribe((resp) => {
+        this.electron.notify({title: 'SWATHLib Connection Status', message: 'Successfully connected to ' + u.url});
       this.urlStatusMap.get(u.url).status = resp['status'] === 200;
     }, (err) => {
+        this.electron.notify({title: 'SWATHLib Connection Status', message: 'Successfully connected to ' + u.url});
       this.urlStatusMap.get(u.url).status = false;
     });
+  }
+
+  AddURL(current) {
+      this.connector.AddURL(current);
+  }
+
+  RemoveURL(tobeRemoved, current) {
+        this.connector.RemoveURL(tobeRemoved, current);
   }
 
   ngOnDestroy() {
@@ -67,6 +77,7 @@ export class ConnectorComponent implements OnInit, OnDestroy {
   }
 
   SaveUrls(urls) {
+      this.electron.notify({title: 'SWATHLib Connections', message: 'Connections Collection Saved!'});
     this.connector.UpdateURLs(urls);
   }
 

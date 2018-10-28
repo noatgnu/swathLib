@@ -7,7 +7,7 @@
             <div class="form-group">
               <label for="FastaRaw">Fasta Content:</label>
               <div>
-                <textarea class="form-control" id="FastaRaw" name="FastaRaw" [(ngModel)]="fastaRaw" required rows="5">
+                <textarea class="form-control" id="FastaRaw" name="FastaRaw" [(ngModel)]="fastaRaw" required rows="2">
               </textarea>
               </div>
 
@@ -155,7 +155,7 @@
   </ngb-tabset>
 </div>
 
-<div class="container-fluid" *ngIf="fasta|async; let fasta">
+<div class="container-fluid mb-4" *ngIf="fasta|async; let fasta">
   <hr/>
   <app-sequence-selector *ngFor="let p of fasta.content" [protein]="p" [form]="passForm"></app-sequence-selector>
 
@@ -170,7 +170,7 @@
         Query finished on {{finishedTime|date:'full'}}
       </div>
       <div class="col-sm-4 text-right">
-        <button type="button" class="btn btn-success" (click)="downloadFile()">Download Compiled Results</button>
+        <button type="button" class="btn btn-success" (click)="downloadFile()">Save Compiled Results</button>
       </div>
     </div>
 
