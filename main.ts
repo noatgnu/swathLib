@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as url from 'url';
 import * as child_process from 'child_process';
 import * as notifier from 'node-notifier';
+import * as fs from 'fs';
 
 const appID = 'me.glycoproteo.swathlib';
 const appName = 'SWATHLib';
@@ -99,8 +100,12 @@ try {
 
   ipcMain.on('backend-start', function (event, arg) {
       if (!arg.status) {
-          const programPath = path.resolve(__dirname, 'backend', 'main.web.py');
-          console.log(arg);
+          let programPath = path.resolve(app.getAppPath(), '..', 'backend', 'main.web.py');
+          if (!fs.existsSync(programPath)) {
+              programPath = path.resolve(app.getAppPath(), 'backend', 'main.web.py');
+          }
+
+          notifier.notify({title: 'message', message: 'starting ' + programPath});
           arg.process = child_process.spawn(arg.pythonPath, ["-u", programPath, "-p", arg.port],{shell: true, detached: true});
           arg.url = 'http://localhost:' + arg.port;
           localBackend.push(arg);

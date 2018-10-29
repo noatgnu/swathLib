@@ -25,6 +25,7 @@
       <button class="btn btn-outline-success" (click)="StartBackend(s)">Start</button>
     </div>
   </div>
+    <p class="text-muted">Python Path should have access to Tornado Web Server and Pyteomics packages</p>
   <hr>
     <h5>Server Connections</h5>
     <div *ngIf="backendObs|async; let backends">
