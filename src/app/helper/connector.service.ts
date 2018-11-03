@@ -92,7 +92,7 @@ export class ConnectorService {
 
   GetURL(checkStatus: boolean = false) {
 
-    while (this.previousUrlIndex >= -1 && this.previousUrlIndex < this.urls.length) {
+    while (this.previousUrlIndex >= -1 && this.previousUrlIndex < this.urls.length - 1) {
         console.log(this.previousUrlIndex);
         this.previousUrlIndex ++;
 
