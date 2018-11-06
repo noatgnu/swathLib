@@ -69,9 +69,10 @@ export class ConnectorService {
       this.connectorSource.next(data);
   }
     checkUrl(u: ConnectorUrl) {
-        if (!this.urlStatusMap.has(u.url)) {
-            this.urlStatusMap.set(u.url, u);
-        }
+        /*if (!this.urlStatusMap.has(u.url)) {
+
+        }*/
+        this.urlStatusMap.set(u.url, u);
         this.CheckURL(u.url).subscribe((resp) => {
             this.urlStatusMap.get(u.url).status = resp['status'] === 200;
         }, (err) => {

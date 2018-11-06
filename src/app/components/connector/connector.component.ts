@@ -52,9 +52,7 @@ export class ConnectorComponent implements OnInit, OnDestroy {
   }
 
   checkUrl(u: ConnectorUrl) {
-    if (!this.urlStatusMap.has(u.url)) {
       this.urlStatusMap.set(u.url, u);
-    }
     this.connector.CheckURL(u.url).subscribe((resp) => {
         this.electron.notify({title: 'SWATHLib Connection Status', message: 'Successfully connected to ' + u.url});
       this.urlStatusMap.get(u.url).status = resp['status'] === 200;
