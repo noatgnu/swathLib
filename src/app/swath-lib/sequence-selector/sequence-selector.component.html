@@ -63,18 +63,28 @@
                 <li *ngFor="let o of extraForm.value['oxonium']">{{o.components}}</li>
               </ul>
             </div>
-            <div class="row" *ngIf="b_stop_at>-1">
-              <small>
-                b-series stopping at {{seqCoord[b_stop_at].aa}}{{b_stop_at+1}}
-              </small>
-               <i class="fa fa-times-circle" (click)="b_stop_at=-1"></i>
-            </div>
-            <div class="row" *ngIf="y_stop_at>-1">
-              <small>
-                y-series stopping at {{seqCoord[y_stop_at].aa}}{{y_stop_at+1}}
-              </small>
-               <i class="fa fa-times-circle" (click)="y_stop_at=-1"></i>
-            </div>
+              <div class="row" *ngIf="b_stop_at>-1">
+                  <small>
+                      b-series stopping at {{seqCoord[b_stop_at].aa}}{{b_stop_at+1}}
+                  </small>
+                  <i class="fa fa-times-circle" (click)="b_stop_at=-1"></i>
+              </div>
+              <div class="row" *ngIf="b_selected.length > 0">
+                  <small>
+                      Selected for b-series: <span *ngFor="let s of b_selected">{{s+1}},</span>
+                  </small>
+              </div>
+              <div class="row" *ngIf="y_stop_at>-1">
+                  <small>
+                      y-series stopping at {{seqCoord[y_stop_at].aa}}{{y_stop_at+1}}
+                  </small>
+                  <i class="fa fa-times-circle" (click)="y_stop_at=-1"></i>
+              </div>
+              <div class="row" *ngIf="y_selected.length > 0">
+                  <small>
+                      Selected for y-series: <span *ngFor="let s of y_selected">{{seqCoord.length - s}},</span>
+                  </small>
+              </div>
             <div class="text-right mt-4">
               <input type="text" class="form-control form-control-sm" aria-label="ion-type" aria-describedby="ion-type" [(ngModel)]="protein.ion_type" placeholder="Ion Type">
             </div>

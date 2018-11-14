@@ -38,6 +38,8 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
   oxonium: Observable<Oxonium[]>;
   sent: boolean;
   progress: number;
+  b_selected = [];
+  y_selected = [];
   b_stop_at = -1;
   y_stop_at = -1;
   progressStage = 'info';
@@ -129,11 +131,11 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
         this.conflict = sm.conflict;
 
         this.progress = 40;
-        const query = this.createQuery(this.protein, this.modSummary, this.form.value['windows'], this.form.value['rt'],
-          this.form.value['extra-mass'], this.form.value['max-charge'], this.form.value['precursor-charge'],
-          this.b_stop_at, this.y_stop_at, this.form.value['variable-bracket-format'], this.extraForm.value['oxonium'],
-          Array.from(this.conflict.values()), this.by_run, this.oxonium_only
-        );
+          const query = this.createQuery(this.protein, this.modSummary, this.form.value['windows'], this.form.value['rt'],
+              this.form.value['extra-mass'], this.form.value['max-charge'], this.form.value['precursor-charge'],
+              this.b_stop_at, this.y_stop_at, this.form.value['variable-bracket-format'], this.extraForm.value['oxonium'],
+              Array.from(this.conflict.values()), this.by_run, this.oxonium_only, this.b_selected, this.y_selected
+          );
         this.srs.SendQuery(query).subscribe((response) => {
           this.progress = 60;
           const df = new DataStore(response.body['data'], true, '');
@@ -192,16 +194,19 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
     });
   }
 
-  private createQuery(protein, modSummary, windows, rt, extramass, maxcharge, precursorcharge, b_stop_at, y_stop_at, variableformat, oxonium, conflict, by_run, oxonium_only) {
-    const query = new SwathQuery(protein, modSummary, windows, rt, extramass, maxcharge, precursorcharge, conflict);
-    query.b_stop_at = b_stop_at;
-    query.y_stop_at = y_stop_at;
-    query.by_run = by_run;
-    query.variable_format = variableformat;
-    query.oxonium = oxonium;
-    query.oxonium_only = oxonium_only;
-    return query;
-  }
+    private createQuery(protein, modSummary, windows, rt, extramass, maxcharge, precursorcharge, b_stop_at, y_stop_at,
+                        variableformat, oxonium, conflict, by_run, oxonium_only, b_selected, y_selected) {
+        const query = new SwathQuery(protein, modSummary, windows, rt, extramass, maxcharge, precursorcharge, conflict);
+        query.b_stop_at = b_stop_at;
+        query.y_stop_at = y_stop_at;
+        query.by_run = by_run;
+        query.variable_format = variableformat;
+        query.oxonium = oxonium;
+        query.oxonium_only = oxonium_only;
+        query.b_selected = b_selected;
+        query.y_selected = y_selected;
+        return query;
+    }
 
   recursiveMods(conflictKeys: Array<number>, conflictMap: Map<number, SeqCoordinate>, start: boolean, resolve?: Map<number, Modification>, key?: number, result?: Array<Map<number, Modification>>) {
     if (start) {
@@ -568,9 +573,27 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
       case 'bstop':
         this.b_stop_at = event.residue;
         break;
-      case 'ystop':
-        this.y_stop_at = event.residue;
-        break;
+        case 'ystop':
+            this.y_stop_at = event.residue;
+            break;
+        case 'bselect':
+
+            if (!this.b_selected.includes(event.residue)) {
+                this.b_selected.push(event.residue);
+            } else {
+                const pos = this.b_selected.indexOf(event.residue);
+                this.b_selected.splice(pos, 1);
+            }
+            break;
+        case 'yselect':
+
+            if (!this.y_selected.includes(event.residue)) {
+                this.y_selected.push(event.residue);
+            } else {
+                const pos = this.y_selected.indexOf(event.residue);
+                this.y_selected.splice(pos, 1);
+            }
+            break;
     }
     console.log(event);
   }

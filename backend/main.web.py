@@ -178,7 +178,11 @@ def read_windows(path):
 
 
 def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variable_mods, Ytype=None, y_stop_at=-1,
-                 b_stop_at=-1, by_static=False):
+                 b_stop_at=-1, by_static=False, b_selected=None, y_selected=None):
+    if b_selected is None:
+        b_selected = []
+    if y_selected is None:
+        y_selected = []
     if Ytype:
         yield from generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp)
     mass_dict = dict(aa_mass)
@@ -189,10 +193,10 @@ def fragments_by(aa_mass, ion_maxcharge, ion_type, labels, seq_len, temp, variab
                     mass_dict[i["label"]] = 0
 
     if "b" in ion_type or "y" in ion_type:
-        yield from generate_byion(mass_dict, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at)
+        yield from generate_byion(mass_dict, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at, b_selected, y_selected)
 
 
-def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at):
+def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len, temp, y_stop_at, b_selected, y_selected):
     for s in range(seq_len):
         if not (s + 1) == 1:
             for m in range(ion_maxcharge):
@@ -202,13 +206,21 @@ def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len,
                         if y_stop_at > -1:
                             if position <= y_stop_at:
                                 continue
-
-                        seq = temp[position:]
-                        str_seq = parser.tostring(seq, False)
-                        # print(str_seq)
-                        yield Ion(seq=temp, ion_type=ion, charge=m + 1,
-                                  mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
-                                                     labels=labels), fragment_number=s + 1)
+                        if y_selected:
+                            if position in y_selected:
+                                seq = temp[position:]
+                                str_seq = parser.tostring(seq, False)
+                                # print(str_seq)
+                                yield Ion(seq=temp, ion_type=ion, charge=m + 1,
+                                          mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
+                                                             labels=labels), fragment_number=s + 1)
+                        else:
+                            seq = temp[position:]
+                            str_seq = parser.tostring(seq, False)
+                            # print(str_seq)
+                            yield Ion(seq=temp, ion_type=ion, charge=m + 1,
+                                      mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
+                                                         labels=labels), fragment_number=s + 1)
                     elif ion == "b":
                         position = s + 1
                         if position == seq_len:
@@ -216,13 +228,21 @@ def generate_byion(aa_mass, b_stop_at, ion_maxcharge, ion_type, labels, seq_len,
                         if b_stop_at > -1:
                             if position > b_stop_at:
                                 continue
-
-                        seq = temp[:position]
-                        str_seq = parser.tostring(seq, False)
-                        # print(str_seq)
-                        yield Ion(seq=temp, ion_type=ion, charge=m + 1,
-                                  mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
-                                                     labels=labels), fragment_number=s + 1)
+                        if b_selected:
+                            if s in b_selected:
+                                seq = temp[:position]
+                                str_seq = parser.tostring(seq, False)
+                                # print(str_seq)
+                                yield Ion(seq=temp, ion_type=ion, charge=m + 1,
+                                          mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
+                                                             labels=labels), fragment_number=s + 1)
+                        else:
+                            seq = temp[:position]
+                            str_seq = parser.tostring(seq, False)
+                            # print(str_seq)
+                            yield Ion(seq=temp, ion_type=ion, charge=m + 1,
+                                      mz=mass.fast_mass2(str_seq, ion_type=ion, charge=m + 1, aa_mass=aa_mass,
+                                                         labels=labels), fragment_number=s + 1)
 
 
 def generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp):
@@ -249,7 +269,7 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
 
         for r in i['_rt']:
             for ion in fragments_by(aa_mass, i['_charge'], i['_protein']['_ion_type'], labels, seq_len, f, mv, Ytype=y,
-                                    b_stop_at=i['_b_stop_at'], y_stop_at=i['_y_stop_at'], by_static=i['_by_run']):
+                                    b_stop_at=i['_b_stop_at'], y_stop_at=i['_y_stop_at'], by_static=i['_by_run'], b_selected=i['_b_selected'], y_selected=i['_y_selected']):
                 create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3,
                            variable)
 

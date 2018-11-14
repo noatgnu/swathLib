@@ -88,12 +88,24 @@ export class SeqViewerComponent implements OnInit, OnDestroy {
           emit.emit({residue: elm.aa.coordinate, event: 'bstop'});
         }
       },
-      {
-        title: 'y-series Stop',
-        action: function(elm, d, i) {
-          emit.emit({residue: elm.aa.coordinate, event: 'ystop'});
+        {
+            title: 'Select for b-series',
+            action: function(elm, d, i) {
+                emit.emit({residue: elm.aa.coordinate, event: 'bselect'});
+            }
+        },
+        {
+            title: 'y-series Stop',
+            action: function(elm, d, i) {
+                emit.emit({residue: elm.aa.coordinate, event: 'ystop'});
+            }
+        },
+        {
+            title: 'Select for y-series',
+            action: function(elm, d, i) {
+                emit.emit({residue: elm.aa.coordinate, event: 'yselect'});
+            }
         }
-      }
     ];
   }
 

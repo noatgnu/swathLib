@@ -5,6 +5,23 @@ import {Oxonium} from './oxonium';
 import {SeqCoordinate} from './seq-coordinate';
 
 export class SwathQuery {
+    get b_selected() {
+        return this._b_selected;
+    }
+
+    set b_selected(value) {
+        this._b_selected = value;
+    }
+
+    get y_selected() {
+        return this._y_selected;
+    }
+
+    set y_selected(value) {
+        this._y_selected = value;
+    }
+    private _b_selected: number[];
+    private _y_selected: number[];
   get oxonium_only(): boolean {
     return this._oxonium_only;
   }
