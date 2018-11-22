@@ -187,47 +187,72 @@
               <form [formGroup]="addModForm">
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="name">Name</span>
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="name">Name</span>
+                    </div>
+
                     <input formControlName="name" type="text" class="form-control" aria-label="name" aria-describedby="name">
+
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="mass">Mass</span>
-                    <input formControlName="mass" type="text" class="form-control" aria-label="mass" aria-describedby="mass">
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="mass">Mass</span>
+                      </div>
+
+                      <input formControlName="mass" type="text" class="form-control" aria-label="mass" aria-describedby="mass">
+
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="type">Modification type</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="type">Modification type</span>
+                      </div>
+
                     <select formControlName="type" class="form-control" aria-label="type" aria-describedby="type">
                       <option value="static">Static</option>
                       <option value="variable">Variable</option>
                       <option value="Ytype">Y-type</option>
                     </select>
+
+
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="Ytype">Y ion-label</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="Ytype">Y ion-label</span>
+                      </div>
+
                     <input formControlName="Ytype" class="form-control" aria-label="Ytype" aria-describedby="Ytype">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="label">Internal Modification Label</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="label">Internal Modification Label</span>
+                      </div>
+
                     <input formControlName="label" class="form-control" aria-label="label" aria-describedby="label">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="regex">Regex</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="regex">Regex</span>
+                      </div>
+
                     <input formControlName="regex" type="text" class="form-control" aria-label="regex" aria-describedby="regex">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="status">Status</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="status">Status</span>
+                      </div>
+
                     <select formControlName="status" class="form-control" aria-label="status" aria-describedby="status">
                       <option value=false>False</option>
                       <option value=true>True</option>
@@ -236,7 +261,10 @@
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="multiple-pattern">Multiple Pattern</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="multiple-pattern">Multiple Pattern</span>
+                      </div>
+
                     <select formControlName="multiple_pattern" class="form-control" aria-label="multiple-pattern" aria-describedby="multiple-pattern">
                       <option value=false>False</option>
                       <option value=true>True</option>
@@ -245,7 +273,10 @@
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                    <span class="input-group-addon" id="auto-allocation">Auto Allocation</span>
+                      <div class="input-group-prepend">
+                          <span class="input-group-text" id="auto-allocation">Auto Allocation</span>
+                      </div>
+
                     <input formControlName="auto_allocation" type="text" class="form-control" aria-label="auto-allocation" aria-describedby="auto-allocation">
                   </div>
                 </div>
