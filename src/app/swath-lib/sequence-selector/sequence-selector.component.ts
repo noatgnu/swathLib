@@ -81,7 +81,11 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
     this.seqCoord = [];
     this.decorSeq();
     this.createExtraForm();
-    this.protein.ion_type = this._form.value['ion-type'];
+    if (this._form.value['ion-type']) {
+        this.protein.ion_type = this._form.value['ion-type'].join().replace(/,/g, '');
+    } else {
+        this.protein.ion_type = '';
+    }
   }
   private _protein: Protein;
   private _form: FormGroup;

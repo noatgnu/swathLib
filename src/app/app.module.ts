@@ -38,6 +38,7 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {AnnoucementService} from './helper/annoucement.service';
 import {SvgContextMenuService} from './helper/svg-context-menu.service';
 import {ConnectorComponent} from './components/connector/connector.component';
+import {QuerysetParameterFormComponent} from "./swath-lib/queryset-parameter-form/queryset-parameter-form.component";
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -54,7 +55,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     UserSettingsComponent,
     SequenceSelectorComponent,
     SeqViewerComponent,
-    ConnectorComponent
+    ConnectorComponent,
+      QuerysetParameterFormComponent
   ],
   imports: [
     BrowserModule,

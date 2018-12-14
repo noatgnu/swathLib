@@ -254,7 +254,7 @@ def generate_Yion(Ytype, aa_mass, ion_maxcharge, ion_type, labels, temp):
                       fragment_number=int(Ytype[1:]) + 1)
 
 
-def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
+def fragmenting(i, rec, ms, mv, query_unique, protein_id, unique_q3=None, y=None):
     labels, aa_mass, seq = prepare_libraries(i['_protein']['_sequence'], static=ms, variable=mv)
     seq_len = len(seq)
     result = []
@@ -271,12 +271,12 @@ def fragmenting(i, rec, ms, mv, query_unique, unique_q3=None, y=None):
             for ion in fragments_by(aa_mass, i['_charge'], i['_protein']['_ion_type'], labels, seq_len, f, mv, Ytype=y,
                                     b_stop_at=i['_b_stop_at'], y_stop_at=i['_y_stop_at'], by_static=i['_by_run'], b_selected=i['_b_selected'], y_selected=i['_y_selected']):
                 create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3,
-                           variable)
+                           variable, protein_id)
 
     return result, query_unique
 
 
-def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3, variable):
+def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result, seq, seq_len, unique_q3, variable, protein_id):
     if 50 <= ion.mz <= 1800:
         if i['_windows']:
             for window in i['_windows']:
@@ -319,9 +319,9 @@ def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result,
                 if unique_q3 is not None:
                     pattern = (tuple(f), precursor_seq, r, w)
                     unique_q3.add(pattern)
-                row = (w, '%.4f' % ion.mz, str(r), i['_protein']['_id'], "", 1, i['_protein']["_sequence"],
+                row = (w, '%.4f' % ion.mz, str(r), protein_id, "", 1, i['_protein']["_sequence"],
                        precursor_seq, 2, ion.ion_type, ion.charge,
-                       ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
+                       ion.fragment_number, str(r), protein_id, 0, 'FALSE', 0, 0.99, 'FALSE', 1,
                        '', '', '',
                        '',)
                 # print(row[7])
@@ -374,9 +374,9 @@ def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result,
             if unique_q3 is not None:
                 pattern = (tuple(f), precursor_seq, r, '%.2f' % precursor_mz,)
                 unique_q3.add(pattern)
-            row = ('%.2f' % precursor_mz, '%.4f' % ion.mz, str(r), i['_protein']['_id'], "", 1,
+            row = ('%.2f' % precursor_mz, '%.4f' % ion.mz, str(r), protein_id, "", 1,
                    i['_protein']["_sequence"], precursor_seq, 2, ion.ion_type, ion.charge,
-                   ion.fragment_number, str(r), i['_protein']['_id'], 0, 'FALSE', 0, 0.99, 'FALSE', 1,
+                   ion.fragment_number, str(r), protein_id, 0, 'FALSE', 0, 0.99, 'FALSE', 1,
                    '',
                    '', '', '')
             unique = (row[0], row[1], row[2], row[3], row[6], row[7],
@@ -434,14 +434,18 @@ class SwathLibHandler(BaseHandler):
         data = escape.json_decode(self.request.body)
         query_unique = set()
         print(data)
+        protein_id = data['_protein']['_id']
+        if not data['_protein']['original'] and data['_protein']['_metadata']['original']['_id']:
+            protein_id = data['_protein']['_metadata']['original']['_id']
+
         if len(data['_modifications']) > 0:
             run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]),
-                                                               query_unique, ignore=[])
+                                                               query_unique, ignore=[], protein_id=protein_id)
             result += run_result
         else:
             if not data['_oxonium_only']:
                 run_result, query_unique, modifications = self.run(data, dict(static=[], variable=[], Ytype=[]),
-                                                                   query_unique, ignore=[])
+                                                                   query_unique, ignore=[], protein_id=protein_id)
                 result += run_result
             if '_oxonium' in data and data['_oxonium_only']:
                 for r in data['_rt']:
@@ -451,11 +455,11 @@ class SwathLibHandler(BaseHandler):
                         ion = 'b'
                         for o in data['_oxonium']:
                             result.append(
-                                {'row': [w, '%.4f' % o['mz'], str(r), data['_protein']['_id'], "", 1,
+                                {'row': [w, '%.4f' % o['mz'], str(r), protein_id, "", 1,
                                          data['_protein']["_sequence"],
-                                         data['_protein']["_sequence"] + "[" + str(int(w)) + "." + str(int(r)) + "]", 2,
+                                         data['_protein']["_sequence"] + "[" + str(int(r)) + "." + str(int(w)) + "]", 2,
                                          ion, fragnum, '1'
-                                    , str(r), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
+                                    , str(r), protein_id, 0, 'FALSE', 0, 0.99,
                                          'FALSE',
                                          1, '',
                                          '', '', '']})
@@ -468,7 +472,7 @@ class SwathLibHandler(BaseHandler):
         print("Finished. " + data['_protein']['_sequence'] + ' ' + str(len(result)))
         self.write(dict(data=result))
 
-    def run(self, data, modifications, query_unique, ignore):
+    def run(self, data, modifications, query_unique, ignore, protein_id):
         run_result = []
         for i in data['_modifications']:
             if i['type'] not in modifications:
@@ -509,7 +513,7 @@ class SwathLibHandler(BaseHandler):
                     ms = copy.deepcopy(modifications['static'])
                     mv = processed[:]
                     mv.append(dict(y))
-                    tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique, unique_q3[y['name']],
+                    tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique, protein_id, unique_q3[y['name']],
                                                            y['Ytype'])
                     if not data['_oxonium_only']:
                         run_result += tempresult
@@ -526,9 +530,9 @@ class SwathLibHandler(BaseHandler):
                                 ion = 'b'
                             for o in data['_oxonium']:
                                 run_result.append(
-                                    {'row': [i[3], '%.4f' % o['mz'], str(i[2]), data['_protein']['_id'], "", 1,
+                                    {'row': [i[3], '%.4f' % o['mz'], str(i[2]), protein_id, "", 1,
                                              data['_protein']["_sequence"], i[1], 2, ion, fragnum, '1'
-                                        , str(i[2]), data['_protein']['_id'], 0, 'FALSE', 0, 0.99,
+                                        , str(i[2]), protein_id, 0, 'FALSE', 0, 0.99,
                                              'FALSE',
                                              1, '',
                                              '', '', '']})
@@ -537,7 +541,7 @@ class SwathLibHandler(BaseHandler):
             else:
                 ms = copy.deepcopy(modifications['static'])
                 mv = processed[:]
-                tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique)
+                tempresult, query_unique = fragmenting(data, rec, ms, mv, query_unique, protein_id)
                 run_result += tempresult
         return run_result, query_unique, modifications
 

@@ -42,11 +42,6 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   ff;
   sf;
   fasta: Observable<FastaFile>;
-  staticMods: Observable<Modification[]>;
-  variableMods: Observable<Modification[]>;
-  Ymods: Observable<Modification[]>;
-  windows: Observable<SwathWindows[]>;
-  oxonium: Observable<Oxonium[]>;
   finished: boolean;
   selectedStaticMods: Observable<Modification[]>;
   private _selectedSource = new Subject<Modification[]>();
@@ -75,12 +70,8 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private mod: SwathLibAssetService, private fastaFile: FastaFileService, private fb: FormBuilder,
               private srs: SwathResultService, private _fh: FileHandlerService, private anSer: AnnoucementService,
               private modalService: NgbModal, private swathHelper: SwathLibHelperService, private uniprot: UniprotService, private electron: ElectronService, private fileService: FileService) {
-    this.staticMods = mod.staticMods;
-    this.variableMods = mod.variableMods;
-    this.Ymods = mod.YtypeMods;
-    this.oxonium = mod.oxoniumReader;
+
     this.selectedStaticMods = this._selectedSource.asObservable();
-    this.windows = mod.windowsReader;
     this.result = mod.result;
     this.ff = fastaFile.fileHandler;
     this.sf = _fh.fileHandler;
@@ -104,15 +95,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
       '/assets/StreamSaver.js/mitm.html');
     this._fh.mitmLocation();
     console.log(this._fh.checkSaveStreamSupport());
-    this.mod.getAssets('assets/new_mods.json').subscribe((resp) => {
-      this.mod.updateMods(resp.body['data']);
-    });
-    this.mod.getAssets('assets/windows.json').subscribe((resp) => {
-      this.mod.updateWindows(resp.body['data']);
-    });
-    this.mod.getAssets('assets/oxonium_ions.json').subscribe((resp) => {
-      this.mod.updateOxonium(resp.body['data']);
-    });
+
     this.mod.getAssets('assets/digest_rules.json').subscribe((resp) => {
       this.mod.updateDigestRules(resp.body['data']);
     });
@@ -163,16 +146,18 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
       'extra-mass': 0,
       'precursor-charge': 2,
       'max-charge': 2,
-      'ion-type': '',
+      'ion-type': [],
       'variable-bracket-format': 'windows'
     });
   }
 
-  applyModification() {
-    console.log(this.form.value);
+  applyModification(form: FormGroup) {
+    this.form = form;
+    console.log(this.form);
     this.passForm = Object.create(this.form);
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, this.acceptedProtein));
   }
+
 
   ngAfterViewInit() {
 
