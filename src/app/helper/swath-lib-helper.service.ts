@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import {Subject} from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 import {AARule, DigestRule} from './digest-rule';
+import {Form, FormGroup} from "@angular/forms";
+import {Protein} from "./protein";
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +14,14 @@ export class SwathLibHelperService {
   selectedObservable = this._selectedSource.asObservable();
   SequenceMap: Map<string, any> = new Map();
   regexFilter = [{name: 'N-Glycosylation', pattern: /N[^XP][S|T]/, offset: 2}];
+  private _selectSidebar = new BehaviorSubject<number>(1);
+  selectSidebarObservable = this._selectSidebar.asObservable();
+  private _rtSource = new Subject<number[]>();
+  rtObservable = this._rtSource.asObservable();
+  private _generalQueryForm = new BehaviorSubject<FormGroup>(null);
+  generalQueryFormObs = this._generalQueryForm.asObservable();
+  private _selectedProtein = new BehaviorSubject<Protein>(null);
+  selectedProtein = this._selectedProtein.asObservable();
   constructor() { }
 
   AddMap(id) {
@@ -58,5 +68,22 @@ export class SwathLibHelperService {
       }
     }
     return m;
+  }
+
+  selectSidebar(n: number) {
+    console.log("Switching to "+n);
+    this._selectSidebar.next(n);
+  }
+
+  updateRT(data: number[]) {
+    this._rtSource.next(data);
+  }
+
+  updateForm(data: FormGroup) {
+    this._generalQueryForm.next(data);
+  }
+
+  updateProtein(data: Protein) {
+    this._selectedProtein.next(data);
   }
 }

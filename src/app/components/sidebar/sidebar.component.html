@@ -1,0 +1,20 @@
+<ngb-tabset class="nav-fill">
+  <ngb-tab title="Main">
+    <ng-template ngbTabContent>
+      <nav class="nav flex-column nav-pills">
+        <a class="nav-link" href="#" (click)="SelectSidebar(1)">Input</a>
+        <a class="nav-link" href="#" (click)="SelectSidebar(2)">Settings</a>
+        <a class="nav-link" href="#" (click)="SelectSidebar(3)">Help</a>
+      </nav>
+    </ng-template>
+  </ngb-tab>
+  <ngb-tab title="Queries">
+    <ng-template ngbTabContent>
+      <div class="list-group" *ngIf="fasta|async; let fasta">
+        <a class="list-group-item list-group-item-action flex-column align-items-start" *ngFor="let p of fasta.content" (click)="SelectPeptide(p)">
+          <app-query-sum class="d-flex w-100 justify-content-between" [protein]="p"></app-query-sum>
+        </a>
+      </div>
+    </ng-template>
+  </ngb-tab>
+</ngb-tabset>

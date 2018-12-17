@@ -29,7 +29,7 @@ import {FileService} from '../providers/file.service';
   selector: 'app-swath-lib',
   templateUrl: './swath-lib.component.html',
   styleUrls: ['./swath-lib.component.scss'],
-  providers: [FastaFileService, UniprotService],
+  providers: [UniprotService],
 })
 export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('trypticDigest') trypticDigest;
@@ -67,6 +67,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   filterChoice;
   acceptTrack = 0;
   acceptedProtein = [];
+  rtSub: Subscription;
   constructor(private mod: SwathLibAssetService, private fastaFile: FastaFileService, private fb: FormBuilder,
               private srs: SwathResultService, private _fh: FileHandlerService, private anSer: AnnoucementService,
               private modalService: NgbModal, private swathHelper: SwathLibHelperService, private uniprot: UniprotService, private electron: ElectronService, private fileService: FileService) {
@@ -82,6 +83,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     for (let i = 1; i <= 60; i++) {
       this.rt.push(i);
     }
+    this.swathHelper.updateRT(this.rt);
     this.fileDownloader = this._fh.saveFile;
     this.regexFilter = this.swathHelper.regexFilter;
   }
@@ -94,6 +96,9 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
       //'schulzlab.glycoproteo.me' +
       '/assets/StreamSaver.js/mitm.html');
     this._fh.mitmLocation();
+    this.rtSub = this.swathHelper.rtObservable.subscribe((data) => {
+      this.rt = data;
+    });
     console.log(this._fh.checkSaveStreamSupport());
 
     this.mod.getAssets('assets/digest_rules.json').subscribe((resp) => {
@@ -133,6 +138,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     this.outputSubscription.unsubscribe();
     this.errSub.unsubscribe();
     this.uniprotSub.unsubscribe();
+    this.rtSub.unsubscribe();
   }
 
   createForm() {
@@ -155,6 +161,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     this.form = form;
     console.log(this.form);
     this.passForm = Object.create(this.form);
+    this.swathHelper.updateForm(this.form);
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, this.acceptedProtein));
   }
 
@@ -191,6 +198,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     this.acceptedProtein = accept;
+    this.swathHelper.updateForm(this.form);
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, accept));
   }
 

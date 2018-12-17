@@ -1,6 +1,6 @@
 <div class="container-fluid">
-  <ngb-tabset>
-    <ngb-tab title="Main">
+  <!--<ngb-tabset type="pills">
+    <ngb-tab title="Input">
       <ng-template ngbTabContent>
         <div class="card mt-2">
           <div class="card-body">
@@ -55,10 +55,51 @@
         <app-swath-lib-help></app-swath-lib-help>
       </ng-template>
     </ngb-tab>
-  </ngb-tabset>
+  </ngb-tabset>-->
+  <div class="card mt-2">
+    <div class="card-body">
+      <div class="form-group">
+        <label for="FastaRaw">Fasta Content:</label>
+        <div>
+                <textarea class="form-control" id="FastaRaw" name="FastaRaw" [(ngModel)]="fastaRaw" required rows="2">
+              </textarea>
+        </div>
+
+      </div>
+      <h4 class="text-muted">
+        OR.
+      </h4>
+      <div class="form-group">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="label-fasta-input">Fasta Input:</span>
+          </div>
+          <div class="custom-file">
+            <input type="file" class="custom-file-input" aria-label="fasta-input" aria-describedby="label-fasta-input" (change)="handleFile($event)" required>
+            <label class="custom-file-label" for="label-fasta-input">{{fileName||'Select File'}}</label>
+          </div>
+
+        </div>
+        <div *ngIf="fasta|async; let fasta">
+          <small id="peptide-summary-rows" class="form-text text-muted">
+            {{fasta.content.length}} peptides have been loaded.
+          </small>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-9"></div>
+        <div class="col-3 text-right">
+          <button class="btn btn-primary" (click)="processFastaContent()">
+            Process Input
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <app-queryset-parameter-form (queryForm)="applyModification($event)" [rt]="rt"></app-queryset-parameter-form>
 </div>
 
-<div class="container-fluid mb-4" *ngIf="fasta|async; let fasta">
+<!--<div class="container-fluid mb-4" *ngIf="fasta|async; let fasta">
   <hr/>
   <app-sequence-selector *ngFor="let p of fasta.content" [protein]="p" [form]="passForm"></app-sequence-selector>
 
@@ -80,7 +121,7 @@
   </div>
 
 
-</div>
+</div>-->
 
 <ng-template #loading>
   <h6 class="card-subtitle mb-2 text-muted">Loading <i class="fa fa-circle-o-notch fa-spin"></i></h6>

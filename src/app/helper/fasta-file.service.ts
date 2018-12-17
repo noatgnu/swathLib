@@ -2,11 +2,11 @@ import { Injectable } from '@angular/core';
 import {Protein} from './protein';
 import {Modification} from './modification';
 import {FastaFile} from './fasta-file';
-import {Subject} from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 
 @Injectable()
 export class FastaFileService {
-  private _fastaSource = new Subject<FastaFile>();
+  private _fastaSource = new BehaviorSubject<FastaFile>(null);
   fastaFileReader = this._fastaSource.asObservable();
   constructor() { }
 

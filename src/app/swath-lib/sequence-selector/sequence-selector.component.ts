@@ -65,6 +65,21 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
   @Input()
   set protein(value: Protein) {
     this._protein = value;
+    if (this.form) {
+      if (!this.libHelper.SequenceMap.has(this.protein.unique_id)) {
+        this.libHelper.AddMap(this.protein.unique_id);
+      }
+
+      this.modMap = new Map<number, Modification[]>();
+      this.seqCoord = [];
+      this.decorSeq();
+      this.createExtraForm();
+      if (this._form.value['ion-type']) {
+        this.protein.ion_type = this._form.value['ion-type'].join().replace(/,/g, '');
+      } else {
+        this.protein.ion_type = '';
+      }
+    }
   }
 
   get form(): FormGroup {
@@ -73,19 +88,22 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
   @Input()
   set form(value: FormGroup) {
     this._form = value;
-    if (!this.libHelper.SequenceMap.has(this.protein.unique_id)) {
-      this.libHelper.AddMap(this.protein.unique_id);
+    if (this.protein) {
+      if (!this.libHelper.SequenceMap.has(this.protein.unique_id)) {
+        this.libHelper.AddMap(this.protein.unique_id);
+      }
+
+      this.modMap = new Map<number, Modification[]>();
+      this.seqCoord = [];
+      this.decorSeq();
+      this.createExtraForm();
+      if (this._form.value['ion-type']) {
+        this.protein.ion_type = this._form.value['ion-type'].join().replace(/,/g, '');
+      } else {
+        this.protein.ion_type = '';
+      }
     }
 
-    this.modMap = new Map<number, Modification[]>();
-    this.seqCoord = [];
-    this.decorSeq();
-    this.createExtraForm();
-    if (this._form.value['ion-type']) {
-        this.protein.ion_type = this._form.value['ion-type'].join().replace(/,/g, '');
-    } else {
-        this.protein.ion_type = '';
-    }
   }
   private _protein: Protein;
   private _form: FormGroup;
