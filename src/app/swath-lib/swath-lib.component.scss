@@ -15,6 +15,12 @@ li.sequence {
   word-break: break-word;
 }
 
+.input-list {
+  max-height: calc(100vh - 50px);
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
 /deep/ .modal-lg {
   max-width: 90%;
 }

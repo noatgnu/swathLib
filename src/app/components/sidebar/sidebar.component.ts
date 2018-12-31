@@ -4,6 +4,8 @@ import {FastaFileService} from "../../helper/fasta-file.service";
 import {Observable} from "rxjs";
 import {FastaFile} from "../../helper/fasta-file";
 import {Protein} from "../../helper/protein";
+import {SwathQuery} from "../../helper/swath-query";
+import {ElectronService} from "../../providers/electron.service";
 
 @Component({
   selector: 'app-sidebar',
@@ -12,7 +14,9 @@ import {Protein} from "../../helper/protein";
 })
 export class SidebarComponent implements OnInit {
   fasta: Observable<FastaFile>;
-  constructor(private helper: SwathLibHelperService, private fastaFile: FastaFileService) {
+  selected: SwathQuery[] = [];
+  maxQueryListHeight: number;
+  constructor(private helper: SwathLibHelperService, private fastaFile: FastaFileService, private electron: ElectronService) {
     this.fasta = this.fastaFile.fastaFileReader;
   }
 
@@ -25,6 +29,20 @@ export class SidebarComponent implements OnInit {
 
   SelectPeptide(p: Protein) {
     this.helper.updateProtein(p);
+
+  }
+
+  SelectQuery() {
+    this.helper.updateSelectedQueries(this.selected);
+    console.log(this.selected);
     this.SelectSidebar(4);
+  }
+
+  clearSelection() {
+    this.selected = [];
+  }
+
+  selectSeq(p: Protein) {
+    this.selected.push(this.helper.queryMap.get(p.unique_id));
   }
 }

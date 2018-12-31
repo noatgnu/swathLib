@@ -59,6 +59,7 @@ export class QuerysetParameterFormComponent implements OnInit {
   }
 
   emitFormValues() {
+    console.log(this.form);
     this.queryForm.emit(this.form);
   }
 

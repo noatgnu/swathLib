@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import {BehaviorSubject, Subject} from 'rxjs';
 import {AARule, DigestRule} from './digest-rule';
-import {Form, FormGroup} from "@angular/forms";
+import {FormGroup} from "@angular/forms";
 import {Protein} from "./protein";
+import {SwathQuery} from "./swath-query";
 
 @Injectable({
   providedIn: 'root'
@@ -20,14 +21,19 @@ export class SwathLibHelperService {
   rtObservable = this._rtSource.asObservable();
   private _generalQueryForm = new BehaviorSubject<FormGroup>(null);
   generalQueryFormObs = this._generalQueryForm.asObservable();
+  private _selectedQueries = new BehaviorSubject<SwathQuery[]>(null);
+  selectedQueries = this._selectedQueries.asObservable();
   private _selectedProtein = new BehaviorSubject<Protein>(null);
   selectedProtein = this._selectedProtein.asObservable();
+  queryMap = new Map<string, SwathQuery>();
+
   constructor() { }
 
   AddMap(id) {
     const changeSource = new Subject<boolean>();
     const selectedSource = new Subject<number[]>();
     this.SequenceMap.set(id, {change: changeSource, selected: selectedSource});
+    console.log(this.SequenceMap);
   }
   Selected(id, data) {
     this.SequenceMap.get(id).selected.next(data);
@@ -80,10 +86,16 @@ export class SwathLibHelperService {
   }
 
   updateForm(data: FormGroup) {
+    console.log(data);
     this._generalQueryForm.next(data);
   }
 
   updateProtein(data: Protein) {
+    console.log("Selected " + data.unique_id);
     this._selectedProtein.next(data);
+  }
+
+  updateSelectedQueries(data) {
+    this._selectedQueries.next(data);
   }
 }

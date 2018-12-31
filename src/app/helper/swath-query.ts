@@ -3,6 +3,7 @@ import {Modification} from './modification';
 import {SwathWindows} from './swath-windows';
 import {Oxonium} from './oxonium';
 import {SeqCoordinate} from './seq-coordinate';
+import {FormGroup} from "@angular/forms";
 
 export class SwathQuery {
     get b_selected() {
@@ -36,7 +37,7 @@ export class SwathQuery {
   set by_run(value: boolean) {
     this._by_run = value;
   }
-  constructor(protein: Protein, modifications: Modification[], windows: SwathWindows[], rt: Array<number>, extra: number, charge: number, precursor_charge: number, conflict: SeqCoordinate[]) {
+  constructor(protein?: Protein, modifications?: Modification[], windows?: SwathWindows[], rt?: Array<number>, extra?: number, charge?: number, precursor_charge?: number, conflict?: SeqCoordinate[]) {
     this._protein = protein;
     this._modifications = modifications;
     this._windows = windows;
@@ -45,7 +46,6 @@ export class SwathQuery {
     this._charge = charge;
     this._precursor_charge = precursor_charge;
     this._conflict = conflict;
-
   }
   get conflict(): SeqCoordinate[] {
     return this._conflict;
@@ -157,7 +157,11 @@ export class SwathQuery {
   set charge(value: number) {
     this._charge = value;
   }
-
+  modMap: Map<number, Modification[]>;
+  libHelper: any;
+  form: FormGroup;
+  currentCoord: SeqCoordinate;
+  seqCoord: SeqCoordinate[];
   private _protein: Protein;
   private _modifications: Modification[];
   private _windows: SwathWindows[];
@@ -172,4 +176,180 @@ export class SwathQuery {
   private _conflict: SeqCoordinate[];
   private _by_run: boolean;
   private _oxonium_only: boolean;
+
+  decorSeq() {
+    if (this.form.value["static"] !== null || this.form.value["variable"] !== null || this.form.value["ytype"] !== null) {
+      this.applyModification(this.protein);
+    }
+    this.transformSequence(this.protein);
+  }
+
+  transformSequence(protein: Protein) {
+    this.modifications = [];
+    this.seqCoord = [];
+    for (let i = 0; i < protein.sequence.length; i++) {
+      const s = new SeqCoordinate(protein.sequence[i], i, '', []);
+      this.setMod(i, s);
+      this.seqCoord.push(s);
+    }
+
+    const sm = this.summarize(this.seqCoord);
+    this.modifications = sm.modSummary;
+    this.conflict = Array.from(sm.conflict.values());
+  }
+
+  setMod(i: number, s: SeqCoordinate) {
+    if (this.modMap !== undefined) {
+      if (this.modMap.has(i)) {
+        for (const m of this.modMap.get(i)) {
+          this.appendMod(s, m);
+        }
+      }
+    }
+  }
+
+  appendMod(s, m) {
+    if (s.modType !== m.type) {
+
+      if (s.modType !== '') {
+        s.modType = 'conflicted';
+      } else {
+        s.modType = m.type;
+      }
+    } else {
+      if (s.modType !== 'Ytype') {
+        s.modType = 'conflicted';
+      }
+    }
+    s.mods.push(m);
+  }
+
+  applyModification(protein: Protein) {
+    this.modifySeq(protein, 'static');
+    this.modifySeq(protein, 'variable');
+    this.modifySeq(protein, 'ytype');
+  }
+
+  modifySeq(f, modCat) {
+    if (this.form.value[modCat] !== null) {
+      for (const m of this.form.value[modCat]) {
+        const reg = new RegExp(m.regex, 'g');
+        let seq = f.sequence;
+        if (f.metadata !== undefined) {
+          if (m.offset !== 0) {
+            if (f.metadata.originalEnd + m.offset <= f.metadata.original.sequence.length) {
+              seq = f.metadata.original.sequence.slice(f.metadata.originalStart, f.metadata.originalEnd + m.offset);
+            }
+          }
+        }
+        let match = reg.exec(seq);
+        while (match != null) {
+          const newMod = Object.create(m);
+          for (const key in newMod) {
+            newMod[key] = newMod[key];
+          }
+          if (this.modMap.has(match.index)) {
+            const mM = this.modMap.get(match.index);
+            mM.push(newMod);
+
+            this.modMap.set(match.index, mM);
+          } else {
+            const n = [];
+            n.push(newMod);
+            this.modMap.set(match.index, n);
+          }
+          match = reg.exec(seq);
+        }
+      }
+    }
+  }
+
+  summarize(seqCoord: SeqCoordinate[]) {
+    const modSummary = [];
+    const conflict = new Map<number, SeqCoordinate>();
+    const summaryMap = new Map<string, number>();
+
+    let count = 0;
+    for (const i of seqCoord) {
+      if (i.mods.length > 0) {
+        if (i.modType === 'conflicted') {
+          conflict.set(i.coordinate, i);
+        }
+        for (const m of i.mods) {
+          if (summaryMap.has(m.name + m.Ytype)) {
+            const sumIndex = summaryMap.get(m.name + m.Ytype);
+            modSummary[sumIndex].positions.push(i.coordinate);
+          } else {
+            const newMod = Object.create(m);
+            for (const key in newMod) {
+              newMod[key] = newMod[key];
+            }
+            modSummary.push(newMod);
+            modSummary[count].positions = [];
+            modSummary[count].positions.push(i.coordinate);
+            if (m.status !== false) {
+              modSummary[count].status = m.status;
+            }
+            summaryMap.set(m.name + m.Ytype, count);
+            count ++;
+          }
+        }
+      }
+    }
+    this.libHelper.Change(this.protein.unique_id, true);
+    return {modSummary, conflict};
+  }
+
+  removeModification(m) {
+    m.forErase = true;
+    let ind = -1;
+    for (let i = 0; i < this.currentCoord.mods.length; i++) {
+      if (this.currentCoord.mods[i].forErase) {
+        ind = i;
+        break;
+      }
+    }
+    if (ind !== -1) {
+      this.currentCoord.mods.splice(ind, 1);
+      let temp = '';
+      for (const mod of this.currentCoord.mods) {
+        if (temp === '') {
+          temp = mod.type;
+        } else {
+          if (temp === mod.type) {
+            if (temp !== 'Ytype') {
+              temp = 'conflicted';
+              break;
+            }
+          } else {
+            temp = 'conflicted';
+            break;
+          }
+        }
+      }
+      this.currentCoord.modType = temp;
+      const sm = this.summarize(this.seqCoord);
+      this.modifications = sm.modSummary;
+      this.conflict = Array.from(sm.conflict.values());
+    }
+  }
+
+  clearModifications() {
+    for (const s of this.seqCoord) {
+      s.modType = undefined;
+      s.mods = [];
+    }
+    const sm = this.summarize(this.seqCoord);
+    this.modifications = sm.modSummary;
+    this.conflict = Array.from(sm.conflict.values());
+  }
+
+  selectCoordinates(coordinates: number[]) {
+    /*for (const c of coordinates) {
+      const el = this.getElement(this.protein.unique_id + c);
+      el.click();
+    }*/
+    console.log(coordinates);
+    this.libHelper.Selected(this.protein.unique_id, coordinates);
+  }
 }

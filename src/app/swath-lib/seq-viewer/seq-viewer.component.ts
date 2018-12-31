@@ -5,6 +5,7 @@ import {SvgAnnotationService} from '../../helper/svg-annotation.service';
 import {Observable, Subscription} from 'rxjs';
 import {SwathLibHelperService} from '../../helper/swath-lib-helper.service';
 import {SvgContextMenuService} from '../../helper/svg-context-menu.service';
+import {SwathQuery} from "../../helper/swath-query";
 
 @Component({
   selector: 'app-seq-viewer',
@@ -17,8 +18,13 @@ export class SeqViewerComponent implements OnInit, OnDestroy {
   @Input() unique_id: string;
   @Output() contextEvent: EventEmitter<any> = new EventEmitter<any>();
   @Input() maxColumn: number;
-  @Input()
-    set Seq(value: SeqCoordinate[]) {
+  @Input() set query(q: SwathQuery) {
+    this.Seq = q.seqCoord;
+  }
+
+  private _query: SwathQuery;
+
+  set Seq(value: SeqCoordinate[]) {
     console.log('changed');
     this._Seq = value;
     const result = this.distributeRow(value, this.maxColumn, this.gridSize);
