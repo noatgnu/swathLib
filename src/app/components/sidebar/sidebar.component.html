@@ -26,8 +26,9 @@
         <div class="card side-footer">
           <div class="card-body text-center">
             <div class="btn-group btn-group-sm">
-              <button type="button" class="btn btn-primary" (click)="clearSelection()">Clear</button>
-              <button type="button" class="btn btn-success" (click)="SelectQuery()">Select <span class="badge badge-light">{{selected.length}}</span></button>
+              <button type="button" class="btn btn-danger" (click)="clearSelection()">Clear</button>
+              <button type="button" class="btn btn-warning" (click)="SelectQuery()">Select <span class="badge badge-light">{{selected.length}}</span></button>
+              <button type="button" class="btn btn-success" (click)="SendQueries()">Submit</button>
             </div>
           </div>
         </div>

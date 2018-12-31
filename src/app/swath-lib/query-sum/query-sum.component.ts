@@ -5,6 +5,9 @@ import {SwathLibHelperService} from "../../helper/swath-lib-helper.service";
 import {Modification} from "../../helper/modification";
 import {Subscription} from "rxjs";
 import {FormGroup} from "@angular/forms";
+import {SwathResultService} from "../../helper/swath-result.service";
+import {AnnoucementService} from "../../helper/annoucement.service";
+import {DataStore} from "../../helper/data-row";
 
 @Component({
   selector: 'app-query-sum',
@@ -17,7 +20,14 @@ export class QuerySumComponent implements OnInit, OnDestroy {
   query: SwathQuery;
   formSub: Subscription;
   form: FormGroup;
-  constructor(private libHelper: SwathLibHelperService) {
+  SendTriggerSub: Subscription;
+  progress;
+  progressStage;
+  sent;
+
+  constructor(private libHelper: SwathLibHelperService,
+              private srs: SwathResultService,
+              private ans: AnnoucementService,) {
 
   }
 
@@ -41,6 +51,36 @@ export class QuerySumComponent implements OnInit, OnDestroy {
           console.log("Update query of " + this.protein.unique_id);
           this.libHelper.queryMap.set(this.protein.unique_id, this.query);
         }
+      }
+    });
+
+    this.SendTriggerSub = this.srs.sendTriggerReader.subscribe((data) => {
+      this.progressStage = 'info';
+      this.sent = false;
+      this.progress = 0;
+      if (data) {
+        this.sent = true;
+        this.progress = 20;
+        this.progress = 40;
+
+        this.srs.SendQuery(this.query).subscribe((response) => {
+          this.progress = 60;
+          const df = new DataStore(response.body['data'], true, '');
+          this.progress = 80;
+          this.srs.UpdateOutput(df);
+          this.progress = 100;
+          this.progressStage = 'success';
+        }, (error) => {
+          this.progressStage = 'error';
+          this.ans.AnnounceError(true);
+          if (error.error instanceof ErrorEvent) {
+            console.error(error.error.message);
+
+          } else {
+            console.error(`Backend returned code ${error.status}, body was: ${error.error}`);
+          }
+        });
+
       }
     });
   }
