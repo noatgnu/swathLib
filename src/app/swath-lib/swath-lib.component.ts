@@ -34,10 +34,7 @@ import {FileService} from '../providers/file.service';
 export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('trypticDigest') trypticDigest;
   currentAllBoxes = true;
-  finishedTime;
   fileDownloader;
-  queryCollection: SwathQuery[] = [];
-  resultCollection: DataStore[] = [];
   form: FormGroup;
   ff;
   sf;
@@ -50,10 +47,8 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   resultReader: Observable<DataStore>;
   digestRules: Observable<any>;
   outputSubscription: Subscription;
-  collectTrigger = false;
   rt = [];
   passForm: FormGroup;
-  findf: DataStore;
   errSub: Subscription;
   fastaRaw = '';
   file;
@@ -104,26 +99,8 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mod.getAssets('assets/digest_rules.json').subscribe((resp) => {
       this.mod.updateDigestRules(resp.body['data']);
     });
-    this.errSub = this.anSer.errorReader.subscribe((data) => {
-      if (data) {
-        this.anSer.Announce('Error.');
-        this.collectTrigger = false;
-      }
-    });
-    this.outputSubscription = this.resultReader.subscribe((data) => {
-      if (this.collectTrigger) {
-        this.resultCollection.push(data);
-        this.anSer.Announce(`Processed ${this.resultCollection.length} of ${this.acceptedProtein.length}`);
-        if (this.resultCollection.length === this.acceptedProtein.length) {
-          this.finishedTime = this.getCurrentDate();
-          this.finished = true;
-          this.collectTrigger = false;
-          this.anSer.Announce('All results have been collected.');
-        }
-      }
-    });
+
     this.uniprotSub = this.uniprot.UniprotResult.subscribe((data) => {
-      const resultMap = new Map<string, string>();
       if (data.DataFrame) {
         const seqColumn = data.DataFrame.columnMap.get('Sequence');
         const idColumn = data.DataFrame.columnMap.get('Entry');
@@ -199,78 +176,11 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.acceptedProtein = accept;
     this.swathHelper.updateForm(this.form);
+    this.swathHelper.SequenceMap = new Map();
+    this.swathHelper.queryMap = new Map<string, SwathQuery>();
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, accept));
   }
 
-  SendQueries() {
-    this.finished = false;
-    this.collectTrigger = true;
-    this.queryCollection = [];
-    this.resultCollection = [];
-    this.anSer.Announce('Queries submitted. Waiting for processing...');
-    this.srs.UpdateSendTrigger(true);
-  }
-
-  downloadFile() {
-    let count = 0;
-    if (window.location.protocol === 'file:') {
-      this.anSer.Announce('Saving...');
-      const picked = this.fileService.save('txt');
-      const fileWriter = this.electron.fs.createWriteStream(picked);
-      let writeHeader = false;
-      for (const r of this.resultCollection) {
-        count++;
-        if (r.header !== undefined) {
-          if (writeHeader === false) {
-            fileWriter.write(r.header.join('\t') + '\n');
-            writeHeader = true;
-          }
-          if (r.data.constructor === Array) {
-            if (r.data.length > 0) {
-              for (const row of r.data) {
-                if (row.row !== undefined) {
-                  fileWriter.write(row.row.join('\t') + '\n');
-                }
-              }
-            }
-          }
-        }
-      }
-      fileWriter.end();
-    } else if (this._fh.checkSaveStreamSupport()) {
-      this.anSer.Announce('Starting stream.');
-      const fileStream = this._fh.createSaveStream(`${this.fastaContent.name}_library.txt`);
-      const writer = fileStream.getWriter();
-      const encoder = new TextEncoding.TextEncoder;
-      let writeHeader = false;
-      for (const r of this.resultCollection) {
-        count++;
-        if (r.header !== undefined) {
-          if (writeHeader === false) {
-            const uint8array = encoder.encode(r.header.join('\t') + '\n');
-            writer.write(uint8array);
-            writeHeader = true;
-          }
-          if (r.data.constructor === Array) {
-            if (r.data.length > 0) {
-              for (const row of r.data) {
-                if (row.row !== undefined) {
-                  const uint8array = encoder.encode(row.row.join('\t') + '\n');
-                  writer.write(uint8array);
-                }
-              }
-            }
-          }
-        }
-      }
-      writer.close();
-    }
-    this.anSer.Announce('Finished.');
-  }
-
-  rounding(n: number): number {
-    return Math.round(n * 10000) / 10000;
-  }
 
   async processFastaContent() {
     console.log('started');

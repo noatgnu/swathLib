@@ -162,6 +162,9 @@ export class SwathQuery {
   form: FormGroup;
   currentCoord: SeqCoordinate;
   seqCoord: SeqCoordinate[];
+  progressStage = "info";
+  sent = false;
+  progress = 0;
   private _protein: Protein;
   private _modifications: Modification[];
   private _windows: SwathWindows[];

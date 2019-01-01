@@ -146,6 +146,9 @@
   <div class="modal-body">
 
     <div class="container-fluid">
+      <div class="pagination-control">
+        <pagination-controls id="inputFasta" (pageChange)="page = $event"></pagination-controls>
+      </div>
       <ul class="list-group input-list">
         <li class="list-group-item list-group-item-secondary">
           <div class="row">
@@ -167,7 +170,7 @@
             </div>
           </div>
         </li>
-        <li class="list-group-item list-group-item{{colorMap.get(digestMap[f.unique_id].accept)}} list-group-item-action sequence" *ngFor="let f of fastaContent.content">
+        <li class="list-group-item list-group-item{{colorMap.get(digestMap[f.unique_id].accept)}} list-group-item-action sequence" *ngFor="let f of fastaContent.content  | paginate: {id: 'inputFasta', itemsPerPage: 5, currentPage: page}">
           <div class="row">
             <div class="col-1">
               <input type="checkbox" [(ngModel)]="digestMap[f.unique_id].accept" (change)="changeAccept(f.unique_id)">

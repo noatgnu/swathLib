@@ -43,6 +43,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import {FastaFileService} from "./helper/fasta-file.service";
 import { QueryViewerComponent } from './swath-lib/query-viewer/query-viewer.component';
 import { QuerySumComponent } from './swath-lib/query-sum/query-sum.component';
+import {NgxPaginationModule} from "ngx-pagination";
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -72,6 +73,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     AppRoutingModule,
     ReactiveFormsModule,
     NgbModule,
+    NgxPaginationModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,

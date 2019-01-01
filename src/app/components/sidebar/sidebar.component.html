@@ -13,10 +13,13 @@
       <div class="query-list">
         <div class="text-center">
           <small class="text-muted" *ngIf="fasta|async; let fasta">{{fasta.content.length}} sequence(s)</small>
+          <div class="pagination-control text-center">
+            <pagination-controls directionLinks="false" id="fastaContent" (pageChange)="page = $event"></pagination-controls>
+          </div>
         </div>
 
         <div class="list-group sequence-list" *ngIf="fasta|async; let fasta">
-          <a class="list-group-item list-group-item-action flex-column align-items-start" *ngFor="let p of fasta.content" (click)="selectSeq(p)">
+          <a class="list-group-item list-group-item-action flex-column align-items-start" *ngFor="let p of fasta.content | paginate: {id: 'fastaContent', itemsPerPage: 8, currentPage: page, maxSize: 5}" (click)="selectSeq(p)">
             <app-query-sum
 
               [protein]="p">
@@ -25,10 +28,20 @@
         </div>
         <div class="card side-footer">
           <div class="card-body text-center">
-            <div class="btn-group btn-group-sm">
-              <button type="button" class="btn btn-danger" (click)="clearSelection()">Clear</button>
-              <button type="button" class="btn btn-warning" (click)="SelectQuery()">Select <span class="badge badge-light">{{selected.length}}</span></button>
-              <button type="button" class="btn btn-success" (click)="SendQueries()">Submit</button>
+            <div class="btn-group btn-group-sm d-flex">
+              <button type="button" class="btn btn-danger w-100" (click)="clearSelection()">Clear</button>
+              <button type="button" class="btn btn-warning w-100" (click)="SelectQuery()">Select <span class="badge badge-light">{{selected.length}}</span></button>
+              <button type="button" class="btn btn-success w-100" (click)="SendQueries()">Submit</button>
+            </div>
+            <div class="text-right mt-4" *ngIf="finished">
+              <div class="row">
+                <div class="col-sm-8">
+                  Query finished on {{finishedTime|date:'full'}}
+                </div>
+                <div class="col-sm-4 text-right">
+                  <button type="button" class="btn btn-success" (click)="downloadFile()">Save Compiled Results</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

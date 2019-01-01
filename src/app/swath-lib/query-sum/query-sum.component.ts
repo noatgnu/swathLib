@@ -20,14 +20,8 @@ export class QuerySumComponent implements OnInit, OnDestroy {
   query: SwathQuery;
   formSub: Subscription;
   form: FormGroup;
-  SendTriggerSub: Subscription;
-  progress;
-  progressStage;
-  sent;
 
-  constructor(private libHelper: SwathLibHelperService,
-              private srs: SwathResultService,
-              private ans: AnnoucementService,) {
+  constructor(private libHelper: SwathLibHelperService) {
 
   }
 
@@ -37,50 +31,20 @@ export class QuerySumComponent implements OnInit, OnDestroy {
       if (this.form) {
         if (this.protein) {
           if (!this.libHelper.SequenceMap.has(this.protein.unique_id)) {
-
+            this.libHelper.AddMap(this.protein.unique_id);
           }
-          this.libHelper.AddMap(this.protein.unique_id);
           if (!this.libHelper.queryMap.has(this.protein.unique_id)) {
-
-          }
-          this.query = this.createQuery(this.protein, [], this.form.value['windows'], this.form.value['rt'],
-            this.form.value['extra-mass'], this.form.value['max-charge'], this.form.value['precursor-charge'],
-            -1, -1, this.form.value['variable-bracket-format'], //this.extraForm.value['oxonium'],
-            null, null, false, false, [], []
-          );
-          console.log("Update query of " + this.protein.unique_id);
-          this.libHelper.queryMap.set(this.protein.unique_id, this.query);
-        }
-      }
-    });
-
-    this.SendTriggerSub = this.srs.sendTriggerReader.subscribe((data) => {
-      this.progressStage = 'info';
-      this.sent = false;
-      this.progress = 0;
-      if (data) {
-        this.sent = true;
-        this.progress = 20;
-        this.progress = 40;
-
-        this.srs.SendQuery(this.query).subscribe((response) => {
-          this.progress = 60;
-          const df = new DataStore(response.body['data'], true, '');
-          this.progress = 80;
-          this.srs.UpdateOutput(df);
-          this.progress = 100;
-          this.progressStage = 'success';
-        }, (error) => {
-          this.progressStage = 'error';
-          this.ans.AnnounceError(true);
-          if (error.error instanceof ErrorEvent) {
-            console.error(error.error.message);
-
+            this.query = this.createQuery(this.protein, [], this.form.value['windows'], this.form.value['rt'],
+              this.form.value['extra-mass'], this.form.value['max-charge'], this.form.value['precursor-charge'],
+              -1, -1, this.form.value['variable-bracket-format'], //this.extraForm.value['oxonium'],
+              null, null, false, false, [], []
+            );
+            console.log("Update query of " + this.protein.unique_id);
+            this.libHelper.queryMap.set(this.protein.unique_id, this.query);
           } else {
-            console.error(`Backend returned code ${error.status}, body was: ${error.error}`);
+            this.query = this.libHelper.queryMap.get(this.protein.unique_id);
           }
-        });
-
+        }
       }
     });
   }
@@ -88,8 +52,8 @@ export class QuerySumComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.formSub.unsubscribe();
     if (this.protein) {
-      this.libHelper.SequenceMap.delete(this.protein.unique_id);
-      this.libHelper.queryMap.delete(this.protein.unique_id);
+      //this.libHelper.SequenceMap.delete(this.protein.unique_id);
+      //this.libHelper.queryMap.delete(this.protein.unique_id);
     }
   }
 
