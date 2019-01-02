@@ -19,11 +19,10 @@ import {DataStore} from "../../helper/data-row";
   styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent implements OnInit {
-  fasta: Observable<FastaFile>;
+  fasta: FastaFile;
   selected: SwathQuery[] = [];
   maxQueryListHeight: number;
   finished = false;
-  collectTrigger = false;
   queryCollection = [];
   resultCollection = [];
   outputSubscription: Subscription;
@@ -31,39 +30,40 @@ export class SidebarComponent implements OnInit {
   acceptedProtein = [];
   finishedTime;
   errSub: Subscription;
+  fastaSub: Subscription;
   constructor(private helper: SwathLibHelperService, private fastaFile: FastaFileService, private electron: ElectronService,
               private anSer: AnnoucementService, private srs: SwathResultService, private fileService: FileService,
               private _fh: FileHandlerService) {
-    this.fasta = this.fastaFile.fastaFileReader;
+
     this.resultReader = srs.OutputReader;
+    this.finished = this.srs.finished;
+    this.finishedTime = this.srs.finishedTime;
   }
 
   ngOnInit() {
     this.errSub = this.anSer.errorReader.subscribe((data) => {
       if (data) {
         this.anSer.Announce('Error.');
-        this.collectTrigger = false;
+        this.srs.collectTrigger = false;
       }
     });
     this.outputSubscription = this.resultReader.subscribe((data) => {
-      if (this.collectTrigger) {
-        this.resultCollection.push(data);
-        this.anSer.Announce(`Processed ${this.resultCollection.length} of ${this.acceptedProtein.length}`);
-        if (this.resultCollection.length === this.acceptedProtein.length) {
-          this.finishedTime = this.getCurrentDate();
-          this.finished = true;
-          this.collectTrigger = false;
+      if (this.srs.collectTrigger) {
+        this.srs.resultCollection.push(data);
+        this.anSer.Announce(`Processed ${this.srs.resultCollection.length} of ${this.acceptedProtein.length}`);
+        if (this.srs.resultCollection.length === this.acceptedProtein.length) {
+          this.srs.finishedTime = this.srs.getCurrentDate();
+          this.srs.finished = true;
+          this.srs.collectTrigger = false;
           this.anSer.Announce('All results have been collected.');
         }
       }
     });
+    this.fastaSub = this.fastaFile.fastaFileReader.subscribe((data) => {
+      this.fasta = data;
+      this.selected = [];
+    })
   }
-
-  getCurrentDate() {
-    return Date.now();
-  }
-
-
 
   SelectSidebar(n: number) {
     this.helper.selectSidebar(n);
@@ -95,9 +95,9 @@ export class SidebarComponent implements OnInit {
 
   SendQueries() {
     this.finished = false;
-    this.collectTrigger = true;
+    this.srs.collectTrigger = true;
     this.queryCollection = [];
-    this.resultCollection = [];
+    this.srs.resultCollection = [];
     this.anSer.Announce('Queries submitted. Waiting for processing...');
     //this.srs.UpdateSendTrigger(true);
     this.acceptedProtein = Array.from(this.helper.queryMap.values());
@@ -106,7 +106,7 @@ export class SidebarComponent implements OnInit {
       a.sent = false;
       a.progress = 0;
       a.sent = true;
-      console.log("Query sent for" + a.protein.unique_id);
+      console.log("Query sent for " + a.protein.unique_id);
       a.progress = 20;
       a.progress = 40;
       this.srs.SendQuery(a).subscribe((response) => {
@@ -119,6 +119,7 @@ export class SidebarComponent implements OnInit {
         }, (error) => {
         a.progressStage = 'error';
         this.anSer.AnnounceError(true);
+        console.log(error);
         if (error.error instanceof ErrorEvent) {
           console.error(error.error.message);
 

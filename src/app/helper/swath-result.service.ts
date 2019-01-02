@@ -8,6 +8,10 @@ import {ConnectorService} from './connector.service';
 
 @Injectable()
 export class SwathResultService {
+  resultCollection = [];
+  finishedTime;
+  finished;
+  collectTrigger;
   private _outputSource = new Subject<DataStore>();
   OutputReader = this._outputSource.asObservable();
   private _sendTrigger = new Subject<boolean>();
@@ -23,15 +27,23 @@ export class SwathResultService {
   SendQuery(data: SwathQuery) {
     for (const m of data.modifications) {
       for (const key in m) {
-        m[key] = m[key];
+        if (m[key].hasOwnProperty()) {
+          m[key] = m[key];
+        }
       }
     }
+    const q = data.toJsonable();
+    console.log(q);
     const url = this.connector.GetURL().url.url + '/api/swathlib/upload/';
     console.log('sending request to ' + url);
-    return this.http.put(url, data, {observe: 'response'});
+    return this.http.put(url, q, {observe: 'response'});
   }
 
   UpdateSendTrigger(data) {
     this._sendTrigger.next(data);
+  }
+
+  getCurrentDate() {
+    return Date.now();
   }
 }

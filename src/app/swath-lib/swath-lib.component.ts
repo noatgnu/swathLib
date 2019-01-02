@@ -137,6 +137,8 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   applyModification(form: FormGroup) {
     this.form = form;
     console.log(this.form);
+    this.swathHelper.SequenceMap = new Map();
+    this.swathHelper.queryMap = new Map<string, SwathQuery>();
     this.passForm = Object.create(this.form);
     this.swathHelper.updateForm(this.form);
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, this.acceptedProtein));
