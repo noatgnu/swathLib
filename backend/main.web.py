@@ -280,7 +280,11 @@ def create_row(f, i, ion, msMap, mv, precursor_mz, query_unique, r, rec, result,
     if 50 <= ion.mz <= 1800:
         if i['_windows']:
             for window in i['_windows']:
-                w = (window['start'] + window['stop']) / 2
+                p = ['start', 'stop']
+                if '_start' in window:
+                    p[0] = '_start'
+                    p[1] = '_stop'
+                w = (window[p[0]] + window[p[1]]) / 2
                 precursor_seq = ""
                 if i['_variable_format'] == 'rt':
                     variable = str(int(r))
@@ -434,6 +438,7 @@ class SwathLibHandler(BaseHandler):
         data = escape.json_decode(self.request.body)
         query_unique = set()
         print(data)
+
         protein_id = data['_protein']['_id']
         if not data['_protein']['original'] and data['_protein']['_metadata']['original']['_id']:
             protein_id = data['_protein']['_metadata']['original']['_id']
@@ -450,7 +455,11 @@ class SwathLibHandler(BaseHandler):
             if '_oxonium' in data and data['_oxonium_only']:
                 for r in data['_rt']:
                     for window in data['_windows']:
-                        w = (window['start'] + window['stop']) / 2
+                        p = ['start', 'stop']
+                        if '_start' in window:
+                            p[0] = '_start'
+                            p[1] = '_stop'
+                        w = (window[p[0]] + window[p[1]]) / 2
                         fragnum = 1
                         ion = 'b'
                         for o in data['_oxonium']:
