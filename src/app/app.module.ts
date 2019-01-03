@@ -44,6 +44,7 @@ import {FastaFileService} from "./helper/fasta-file.service";
 import { QueryViewerComponent } from './swath-lib/query-viewer/query-viewer.component';
 import { QuerySumComponent } from './swath-lib/query-sum/query-sum.component';
 import {NgxPaginationModule} from "ngx-pagination";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -61,13 +62,14 @@ export function HttpLoaderFactory(http: HttpClient) {
     SequenceSelectorComponent,
     SeqViewerComponent,
     ConnectorComponent,
-      QuerysetParameterFormComponent,
-      SidebarComponent,
-      QueryViewerComponent,
-      QuerySumComponent
+    QuerysetParameterFormComponent,
+    SidebarComponent,
+    QueryViewerComponent,
+    QuerySumComponent
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     FormsModule,
     HttpClientModule,
     AppRoutingModule,

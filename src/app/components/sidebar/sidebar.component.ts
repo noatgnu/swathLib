@@ -53,7 +53,7 @@ export class SidebarComponent implements OnInit {
         this.anSer.Announce(`Processed ${this.srs.resultCollection.length} of ${this.acceptedProtein.length}`);
         if (this.srs.resultCollection.length === this.acceptedProtein.length) {
           this.srs.finishedTime = this.srs.getCurrentDate();
-          this.srs.finished = true;
+          this.srs.UpdateFinishTrigger(true);
           this.srs.collectTrigger = false;
           this.anSer.Announce('All results have been collected.');
         }

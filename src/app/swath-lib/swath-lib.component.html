@@ -140,16 +140,21 @@
     </div>
   </div>
   <div class="modal-footer">
-    <div class="input-group">
-      <select class="custom-select" id="filterRegex" [(ngModel)]="filterChoice">
-        <option *ngFor="let f of regexFilter" [ngValue]="f">{{f.name}}</option>
-      </select>
-      <span class="input-group-btn">
-        <button type="button" class="btn btn-danger" (click)="filterSeq()">Filter Selected</button>
+    <div class="col-5">
+      <div class="input-group">
+        <select class="custom-select" id="filterRegex" [(ngModel)]="filterChoice">
+          <option *ngFor="let f of regexFilter" [ngValue]="f">{{f.name}}</option>
+        </select>
+        <span class="input-group-append">
+        <button type="button" class="btn btn-sm btn-danger" (click)="filterSeq()">Filter Selected</button>
       </span>
+      </div>
     </div>
-    <button type="button" class="btn btn-warning ml-auto" (click)="fetchUniprot()">Fetch Uniprot Sequence</button>
-    <button type="button" class="btn btn-secondary" (click)="exportFasta()">Export Fasta File</button>
-    <button type="button" class="btn btn-primary" (click)="acceptContent()">Accept <span class="badge badge-light">{{acceptTrack}}</span></button>
+    <div class="col-7 text-right">
+      <button type="button" class="btn btn-warning mr-2" (click)="fetchUniprot()">Fetch Uniprot Sequence</button>
+      <button type="button" class="btn btn-secondary mr-2" (click)="exportFasta()">Export Fasta File</button>
+      <button type="button" class="btn btn-primary" (click)="acceptContent()">Accept <span class="badge badge-light">{{acceptTrack}}</span></button>
+    </div>
+
   </div>
 </ng-template>

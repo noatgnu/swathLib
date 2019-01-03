@@ -33,16 +33,22 @@
     </span>
       </div>
     </nav>
-    <div class="download-popup" *ngIf="finished">
-      <div class="card">
-        <div class="card-body">
-          <div class="card-text">
-            Query finished on {{finishedTime|date:'full'}}
-          </div>
-          <div class="text-center">
-            <button type="button" class="btn btn-primary" (click)="downloadFile()">Download</button>
+    <div class="card download-popup" *ngIf="finished">
+      <div class="card-body">
+
+        <div class="card-text">
+          <div class="row">
+            <div class="col-9">
+              <p *ngIf="finishedTime">
+                Query finished on {{finishedTime|date:'full'}}
+              </p>
+            </div>
+            <div class="col-3">
+              <button type="button" class="btn btn-block btn-primary save-button" (click)="downloadFile()"><span class="material-icons server-settings">save</span> Save</button>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
     <div class="swcontainer">

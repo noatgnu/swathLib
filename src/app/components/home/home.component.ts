@@ -7,11 +7,28 @@ import {ConnectorService} from '../../helper/connector.service';
 import {SwathLibHelperService} from "../../helper/swath-lib-helper.service";
 import {SwathResultService} from "../../helper/swath-result.service";
 import {FileService} from "../../providers/file.service";
+import {trigger, state, style, animate, transition} from '@angular/animations';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
+  animations: [
+      trigger('openClose', [
+          state('open', style({
+             bottom: '50px',
+          })),
+          state('closed', style({
+            bottom: '0px',
+          })),
+          transition('open => closed', [
+              animate(500)
+          ]),
+          transition('closed => open', [
+              animate(500)
+          ])
+      ])
+  ]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   annoucement: Observable<string>;
@@ -21,21 +38,33 @@ export class HomeComponent implements OnInit, OnDestroy {
   selected = 1;
   finishedTime;
   finished;
+  downloadPopupState = 'closed';
+  finishedSub: Subscription;
   constructor(public electronService: ElectronService, private srs: SwathResultService, private fileService: FileService,
               private translate: TranslateService, private anSer: AnnoucementService, private connector: ConnectorService, private helper: SwathLibHelperService) {
     this.annoucement = this.anSer.annoucementReader;
-    this.finished = this.srs.finished;
     this.finishedTime = this.srs.finishedTime;
   }
 
   ngOnInit() {
     this.sidebarSelect = this.helper.selectSidebarObservable.subscribe((data) => {
       this.selected = data;
+    });
+    this.finishedSub = this.srs.finishedTrigger.subscribe((data) => {
+      this.finished = data;
+      console.log(this.finished);
+      if (data) {
+        this.finishedTime = this.srs.getCurrentDate();
+        this.downloadPopupState = 'open';
+      } else {
+        this.downloadPopupState = 'closed';
+      }
     })
   }
 
   ngOnDestroy(): void {
     this.sidebarSelect.unsubscribe();
+    this.finishedSub.unsubscribe();
   }
 
   toggleCollapsed(): void {
@@ -87,5 +116,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       fileWriter.end();
     }
     this.anSer.Announce('Finished.');
+  }
+
+  changeState() {
+    if (this.downloadPopupState == 'open') {
+      this.downloadPopupState = 'closed';
+    } else {
+      this.downloadPopupState = 'open';
+    }
   }
 }
