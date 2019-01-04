@@ -1,5 +1,4 @@
 import {Component, OnInit, Input, OnDestroy, ViewChild} from '@angular/core';
-import {Protein} from '../../helper/protein';
 import {SeqCoordinate} from '../../helper/seq-coordinate';
 import {Modification} from '../../helper/modification';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
@@ -15,11 +14,10 @@ import {Observable} from 'rxjs';
 import {SwathResultService} from '../../helper/swath-result.service';
 import {SwathQuery} from '../../helper/swath-query';
 import {Subscription} from 'rxjs';
-import {DataStore} from '../../helper/data-row';
 import {Oxonium} from '../../helper/oxonium';
 import {AnnoucementService} from '../../helper/annoucement.service';
-import {Subject} from 'rxjs';
 import {SwathLibHelperService} from '../../helper/swath-lib-helper.service';
+import {SwathWindows} from "../../helper/swath-windows";
 
 @Component({
   selector: 'app-sequence-selector',
@@ -50,6 +48,8 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
   variableMods: Observable<Modification[]>;
   Ymods: Observable<Modification[]>;
   oxonium: Observable<Oxonium[]>;
+  windows: Observable<SwathWindows[]>;
+  rt: Observable<number[]>;
   sent: boolean;
   progress: number;
 
@@ -80,7 +80,8 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
     this.sendTriggerRead = this.srs.sendTriggerReader;
     tooltip.placement = 'top';
     tooltip.triggers = 'hover';
-
+    this.rt = this.libHelper.rtObservable;
+    this.windows = this.mod.windowsReader;
   }
 
 
@@ -125,14 +126,21 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
     });
   }
 
+  constExtraForm(name: string, oxonium: [], windows: [], rt: []): FormGroup {
+    return this.fb.group({
+      'name': name,
+      'oxonium': [],
+      'windows': [],
+      'rt': []
+    })
+  }
+
   createExtraForm() {
     console.log(this._query.form.value['oxonium']);
-    if (this._query.form.value['oxonium']) {
+    this.extraForm = this.constExtraForm(this._query.protein.id, Object.create(this._query.form.value['oxonium']), this._query.form.value['windows'], this._query.form.value['rt']);
+    /*if (this._query.form.value['oxonium']) {
       if (this._query.form.value['oxonium'].length > 0) {
-        this.extraForm = this.fb.group({
-          'name': '',
-          'oxonium': Object.create(this._query.form.value['oxonium'])
-        });
+
       } else {
         this.extraForm = this.fb.group({
           'name': '',
@@ -144,7 +152,7 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
         'name': '',
         'oxonium': []
       });
-    }
+    }*/
 
   }
 

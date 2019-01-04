@@ -144,13 +144,26 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, this.acceptedProtein));
   }
 
+  private updateContent() {
+    this.swathHelper.SequenceMap = new Map();
+    this.swathHelper.queryMap = new Map<string, SwathQuery>();
+    this.passForm = Object.create(this.form);
+    const accept = [];
+    for (const i of this.fastaContent.content) {
+      if (this.digestMap[i.unique_id].accept) {
+        if (i.sequence !== '') {
+          accept.push(i);
+        }
+      }
+    }
+    this.acceptedProtein = accept;
+    this.swathHelper.updateForm(this.form);
+    console.log(this.form);
+    this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, accept));
+  }
 
   ngAfterViewInit() {
 
-  }
-
-  getCurrentDate() {
-    return Date.now();
   }
 
   handleFile(e) {
@@ -166,22 +179,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private updateContent() {
-    this.passForm = Object.create(this.form);
-    const accept = [];
-    for (const i of this.fastaContent.content) {
-      if (this.digestMap[i.unique_id].accept) {
-        if (i.sequence !== '') {
-          accept.push(i);
-        }
-      }
-    }
-    this.acceptedProtein = accept;
-    this.swathHelper.updateForm(this.form);
-    this.swathHelper.SequenceMap = new Map();
-    this.swathHelper.queryMap = new Map<string, SwathQuery>();
-    this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, accept));
-  }
+
 
 
   async processFastaContent() {

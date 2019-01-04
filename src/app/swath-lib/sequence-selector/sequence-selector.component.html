@@ -317,6 +317,22 @@
           </option>
         </select>
       </div>
+      <div class="form-group">
+        <label for="windows">SWATH Windows:</label>
+        <select multiple class="form-control" id="windows" formControlName="windows" *ngIf="windows|async; let windows">
+          <option *ngFor="let w of windows" [value]="w">
+            {{w.start}} - {{w.stop}}
+          </option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="rt">Retention Time:</label>
+        <select multiple class="form-control" id="rt" formControlName="rt" *ngIf="rt|async; let rt">
+          <option *ngFor="let r of rt" [value]="r">
+            {{r}}
+          </option>
+        </select>
+      </div>
     </form>
   </div>
   <div class="modal-footer">

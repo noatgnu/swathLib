@@ -17,7 +17,7 @@ export class SwathLibHelperService {
   regexFilter = [{name: 'N-Glycosylation', pattern: /N[^XP][S|T]/, offset: 2}];
   private _selectSidebar = new BehaviorSubject<number>(1);
   selectSidebarObservable = this._selectSidebar.asObservable();
-  private _rtSource = new Subject<number[]>();
+  private _rtSource = new BehaviorSubject<number[]>(null);
   rtObservable = this._rtSource.asObservable();
   private _generalQueryForm = new BehaviorSubject<FormGroup>(null);
   generalQueryFormObs = this._generalQueryForm.asObservable();

@@ -5,6 +5,7 @@ import {Modification} from '../../helper/modification';
 import {SwathWindows} from '../../helper/swath-windows';
 import {Oxonium} from '../../helper/oxonium';
 import {FormBuilder, FormGroup} from '@angular/forms';
+import {SwathLibHelperService} from "../../helper/swath-lib-helper.service";
 
 @Component({
   selector: 'app-queryset-parameter-form',
