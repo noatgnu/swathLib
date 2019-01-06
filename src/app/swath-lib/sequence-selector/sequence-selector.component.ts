@@ -129,15 +129,15 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
   constExtraForm(name: string, oxonium: [], windows: [], rt: []): FormGroup {
     return this.fb.group({
       'name': name,
-      'oxonium': [],
-      'windows': [],
-      'rt': []
+      'oxonium': oxonium,
+      'windows': windows,
+      'rt': rt
     })
   }
 
   createExtraForm() {
     console.log(this._query.form.value['oxonium']);
-    this.extraForm = this.constExtraForm(this._query.protein.id, Object.create(this._query.form.value['oxonium']), this._query.form.value['windows'], this._query.form.value['rt']);
+    this.extraForm = this.constExtraForm(this._query.protein.id, [], [], []);
     /*if (this._query.form.value['oxonium']) {
       if (this._query.form.value['oxonium'].length > 0) {
 

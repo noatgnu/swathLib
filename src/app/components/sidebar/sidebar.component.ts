@@ -12,11 +12,13 @@ import {FileService} from "../../providers/file.service";
 import {FileHandlerService} from "../../helper/file-handler.service";
 import * as TextEncoding from 'text-encoding';
 import {DataStore} from "../../helper/data-row";
+import {animate, state, style, transition, trigger} from "@angular/animations";
 
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss']
+  styleUrls: ['./sidebar.component.scss'],
+
 })
 export class SidebarComponent implements OnInit {
   fasta: FastaFile;
@@ -85,6 +87,14 @@ export class SidebarComponent implements OnInit {
   }
 
   selectSeq(p: Protein) {
+    switch (this.helper.queryMap.get(p.unique_id).selected) {
+      case "select":
+        this.helper.queryMap.get(p.unique_id).selected = "unselect";
+        break;
+      case "unselect":
+        this.helper.queryMap.get(p.unique_id).selected = "select";
+        break;
+    }
     const ind = this.selected.indexOf(this.helper.queryMap.get(p.unique_id));
     if ( ind > -1) {
       this.selected.splice(ind, 1);

@@ -2,17 +2,30 @@ import {Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angula
 import {Protein} from "../../helper/protein";
 import {SwathQuery} from "../../helper/swath-query";
 import {SwathLibHelperService} from "../../helper/swath-lib-helper.service";
-import {Modification} from "../../helper/modification";
 import {Subscription} from "rxjs";
 import {FormGroup} from "@angular/forms";
-import {SwathResultService} from "../../helper/swath-result.service";
-import {AnnoucementService} from "../../helper/annoucement.service";
-import {DataStore} from "../../helper/data-row";
+import {animate, state, style, transition, trigger} from "@angular/animations";
 
 @Component({
   selector: 'app-query-sum',
   templateUrl: './query-sum.component.html',
-  styleUrls: ['./query-sum.component.scss']
+  styleUrls: ['./query-sum.component.scss'],
+  animations: [
+    trigger('selected', [
+      state('select', style({
+        color: "red",
+      })),
+      state('unselect', style({
+        color: "black",
+      })),
+      transition('select => unselect', [
+        animate(500)
+      ]),
+      transition('unselect => select', [
+        animate(500)
+      ])
+    ])
+  ]
 })
 export class QuerySumComponent implements OnInit, OnDestroy {
   @Input() protein: Protein;
@@ -37,7 +50,7 @@ export class QuerySumComponent implements OnInit, OnDestroy {
             this.query = this.createQuery(this.protein, [], this.form.value['windows'], this.form.value['rt'],
               this.form.value['extra-mass'], this.form.value['max-charge'], this.form.value['precursor-charge'],
               -1, -1, this.form.value['variable-bracket-format'], //this.extraForm.value['oxonium'],
-              null, null, false, false, [], []
+              this.form.value['oxonium'], null, false, false, [], []
             );
             console.log("Update query of " + this.protein.unique_id);
             this.libHelper.queryMap.set(this.protein.unique_id, this.query);

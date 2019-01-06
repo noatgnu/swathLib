@@ -19,7 +19,7 @@ import {trigger, state, style, animate, transition} from '@angular/animations';
              bottom: '50px',
           })),
           state('closed', style({
-            bottom: '0px',
+            bottom: '-80px',
           })),
           transition('open => closed', [
               animate(500)

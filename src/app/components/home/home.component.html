@@ -33,7 +33,7 @@
     </span>
       </div>
     </nav>
-    <div class="card download-popup" *ngIf="finished">
+    <div class="card download-popup" [@openClose]="downloadPopupState" *ngIf="finished">
       <div class="card-body">
 
         <div class="card-text">

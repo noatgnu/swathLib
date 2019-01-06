@@ -6,6 +6,7 @@ import {SeqCoordinate} from './seq-coordinate';
 import {FormGroup} from "@angular/forms";
 
 export class SwathQuery {
+  selected = "unselect";
   keepProperties = ["_protein", "_modifications", "_oxonium_only", '_rt', '_windows', '_oxonium', '_by_run',
     '_variable_format', '_charge', '_b_stop_at', '_y_stop_at', '_y_selected', '_b_selected', '_precursor_charge', '_conflict'];
     get b_selected() {

@@ -2,7 +2,6 @@ import {Component, OnInit, AfterViewInit, OnDestroy, ViewChild} from '@angular/c
 import {FormBuilder, FormGroup} from '@angular/forms';
 import {SwathLibAssetService, SwathResponse} from '../helper/swath-lib-asset.service';
 import {Observable} from 'rxjs';
-import {VariableMod} from '../helper/variable-mod';
 import {Subject} from 'rxjs';
 import {FastaFileService} from '../helper/fasta-file.service';
 import {Modification} from '../helper/modification';
@@ -10,17 +9,12 @@ import {FastaFile} from '../helper/fasta-file';
 import {SwathQuery} from '../helper/swath-query';
 import {SwathResultService} from '../helper/swath-result.service';
 import {Subscription} from 'rxjs';
-import {SwathWindows} from '../helper/swath-windows';
-import {DataStore, Result} from '../helper/data-row';
+import {DataStore} from '../helper/data-row';
 import {FileHandlerService} from '../helper/file-handler.service';
-import {Oxonium} from '../helper/oxonium';
 import {AnnoucementService} from '../helper/annoucement.service';
-import * as TextEncoding from 'text-encoding';
-import {BaseUrl} from '../helper/base-url';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Protein} from '../helper/protein';
 import {SwathLibHelperService} from '../helper/swath-lib-helper.service';
-import {AARule, DigestRule} from '../helper/digest-rule';
 import {UniprotService} from '../helper/uniprot.service';
 import {ElectronService} from '../providers/electron.service';
 import {FileService} from '../providers/file.service';
@@ -33,6 +27,7 @@ import {FileService} from '../providers/file.service';
 })
 export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('trypticDigest') trypticDigest;
+  @ViewChild('queryForm') queryForm;
   currentAllBoxes = true;
   fileDownloader;
   form: FormGroup;
@@ -147,6 +142,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   private updateContent() {
     this.swathHelper.SequenceMap = new Map();
     this.swathHelper.queryMap = new Map<string, SwathQuery>();
+    this.form = this.queryForm.form;
     this.passForm = Object.create(this.form);
     const accept = [];
     for (const i of this.fastaContent.content) {

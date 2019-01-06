@@ -190,19 +190,15 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="name">Name</span>
                     </div>
-
                     <input formControlName="name" type="text" class="form-control" aria-label="name" aria-describedby="name">
-
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="mass">Mass</span>
-                      </div>
-
-                      <input formControlName="mass" type="text" class="form-control" aria-label="mass" aria-describedby="mass">
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="mass">Mass</span>
+                    </div>
+                    <input formControlName="mass" type="text" class="form-control" aria-label="mass" aria-describedby="mass">
                   </div>
                 </div>
                 <div class="form-group row">
@@ -210,14 +206,11 @@
                       <div class="input-group-prepend">
                           <span class="input-group-text" id="type">Modification type</span>
                       </div>
-
                     <select formControlName="type" class="form-control" aria-label="type" aria-describedby="type">
                       <option value="static">Static</option>
                       <option value="variable">Variable</option>
                       <option value="Ytype">Y-type</option>
                     </select>
-
-
                   </div>
                 </div>
                 <div class="form-group row">
@@ -231,28 +224,25 @@
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="label">Internal Modification Label</span>
-                      </div>
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="label">Internal Modification Label</span>
+                    </div>
                     <input formControlName="label" class="form-control" aria-label="label" aria-describedby="label">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="regex">Regex</span>
-                      </div>
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="regex">Regex</span>
+                    </div>
                     <input formControlName="regex" type="text" class="form-control" aria-label="regex" aria-describedby="regex">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="status">Status</span>
-                      </div>
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="status">Status</span>
+                    </div>
                     <select formControlName="status" class="form-control" aria-label="status" aria-describedby="status">
                       <option value=false>False</option>
                       <option value=true>True</option>
@@ -316,6 +306,7 @@
             {{o.components}} ({{o.mz}} m/z)
           </option>
         </select>
+        <small class="text-muted">Current selection:<span *ngFor="let i of query.oxonium"> {{i.components}},</span></small>
       </div>
       <div class="form-group">
         <label for="windows">SWATH Windows:</label>
@@ -324,6 +315,7 @@
             {{w.start}} - {{w.stop}}
           </option>
         </select>
+        <small class="text-muted">Current selection:<span *ngFor="let i of query.windows"> {{i.start}}-{{i.stop}},</span></small>
       </div>
       <div class="form-group">
         <label for="rt">Retention Time:</label>
@@ -332,6 +324,7 @@
             {{r}}
           </option>
         </select>
+        <small class="text-muted">Current selection:<span *ngFor="let i of query.rt"> {{i}},</span></small>
       </div>
     </form>
   </div>
