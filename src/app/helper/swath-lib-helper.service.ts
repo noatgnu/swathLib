@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {BehaviorSubject, Subject} from 'rxjs';
 import {AARule, DigestRule} from './digest-rule';
-import {FormGroup} from "@angular/forms";
+import {Form, FormGroup} from "@angular/forms";
 import {Protein} from "./protein";
 import {SwathQuery} from "./swath-query";
 
@@ -9,6 +9,7 @@ import {SwathQuery} from "./swath-query";
   providedIn: 'root'
 })
 export class SwathLibHelperService {
+  form: FormGroup;
   private _changeSource = new Subject<boolean>();
   changeObservable = this._changeSource.asObservable();
   private _selectedSource = new Subject<number[]>();
@@ -87,6 +88,7 @@ export class SwathLibHelperService {
 
   updateForm(data: FormGroup) {
     console.log(data);
+    this.form = data;
     this._generalQueryForm.next(data);
   }
 
@@ -97,5 +99,30 @@ export class SwathLibHelperService {
 
   updateSelectedQueries(data) {
     this._selectedQueries.next(data);
+  }
+
+  createQuery(protein, modSummary, windows, rt, extramass, maxcharge, precursorcharge, b_stop_at, y_stop_at,
+              variableformat, oxonium, conflict, by_run, oxonium_only, b_selected, y_selected, form) {
+    const query = new SwathQuery(protein, modSummary, windows, rt, extramass, maxcharge, precursorcharge, conflict);
+    query.b_stop_at = b_stop_at;
+    query.y_stop_at = y_stop_at;
+    query.by_run = by_run;
+    query.variable_format = variableformat;
+    query.oxonium = oxonium;
+    query.oxonium_only = oxonium_only;
+    query.b_selected = b_selected;
+    query.y_selected = y_selected;
+    query.libHelper = this;
+    query.modMap = new Map();
+    query.form = form;
+    query.seqCoord = [];
+    query.decorSeq();
+    if (query.form.value['ion-type']) {
+      query.protein.ion_type = query.form.value['ion-type'].join().replace(/,/g, '');
+    } else {
+      query.protein.ion_type = '';
+    }
+    console.log(query);
+    return query;
   }
 }

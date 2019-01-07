@@ -47,10 +47,10 @@ export class QuerySumComponent implements OnInit, OnDestroy {
             this.libHelper.AddMap(this.protein.unique_id);
           }
           if (!this.libHelper.queryMap.has(this.protein.unique_id)) {
-            this.query = this.createQuery(this.protein, [], this.form.value['windows'], this.form.value['rt'],
+            this.query = this.libHelper.createQuery(this.protein, [], this.form.value['windows'], this.form.value['rt'],
               this.form.value['extra-mass'], this.form.value['max-charge'], this.form.value['precursor-charge'],
               -1, -1, this.form.value['variable-bracket-format'], //this.extraForm.value['oxonium'],
-              this.form.value['oxonium'], null, false, false, [], []
+              this.form.value['oxonium'], null, false, false, [], [], this.form
             );
             console.log("Update query of " + this.protein.unique_id);
             this.libHelper.queryMap.set(this.protein.unique_id, this.query);

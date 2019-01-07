@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {SwathLibHelperService} from "../../helper/swath-lib-helper.service";
 import {FastaFileService} from "../../helper/fasta-file.service";
 import {Observable, Subscription} from "rxjs";
@@ -20,7 +20,7 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
   styleUrls: ['./sidebar.component.scss'],
 
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   fasta: FastaFile;
   selected: SwathQuery[] = [];
   maxQueryListHeight: number;
@@ -40,6 +40,12 @@ export class SidebarComponent implements OnInit {
     this.resultReader = srs.OutputReader;
     this.finished = this.srs.finished;
     this.finishedTime = this.srs.finishedTime;
+  }
+
+  ngOnDestroy(): void {
+    this.outputSubscription.unsubscribe();
+    this.errSub.unsubscribe();
+    this.fastaSub.unsubscribe();
   }
 
   ngOnInit() {
@@ -73,7 +79,12 @@ export class SidebarComponent implements OnInit {
 
   SelectPeptide(p: Protein) {
     this.helper.updateProtein(p);
+  }
 
+  SelectAll() {
+    for (const p of this.fasta.content) {
+      this.selectSeq(p);
+    }
   }
 
   SelectQuery() {
@@ -87,6 +98,15 @@ export class SidebarComponent implements OnInit {
   }
 
   selectSeq(p: Protein) {
+    if (!this.helper.queryMap.has(p.unique_id)) {
+      const query = this.helper.createQuery(p, [], this.helper.form.value['windows'], this.helper.form.value['rt'],
+          this.helper.form.value['extra-mass'], this.helper.form.value['max-charge'], this.helper.form.value['precursor-charge'],
+          -1, -1, this.helper.form.value['variable-bracket-format'], //this.extraForm.value['oxonium'],
+          this.helper.form.value['oxonium'], null, false, false, [], [], this.helper.form
+      );
+      console.log("Update query of " + p.unique_id);
+      this.helper.queryMap.set(p.unique_id, query);
+    }
     switch (this.helper.queryMap.get(p.unique_id).selected) {
       case "select":
         this.helper.queryMap.get(p.unique_id).selected = "unselect";
