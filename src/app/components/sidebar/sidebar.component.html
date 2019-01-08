@@ -26,8 +26,13 @@
               </div>
             </div>
           </div>
-          <div class="pagination-control text-center">
-            <pagination-controls directionLinks="false" id="fastaContent" (pageChange)="page = $event"></pagination-controls>
+          <div class="pagination-control">
+            <pagination-controls
+                    directionLinks="false"
+                    id="fastaContent"
+                    responsive="true"
+                    (pageChange)="page = $event">
+            </pagination-controls>
           </div>
 
 
