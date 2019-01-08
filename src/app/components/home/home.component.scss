@@ -30,10 +30,10 @@ $side-width: 240px;
   color: #f1f1f1;
 }
 
-@media screen and (max-height: 450px) {
+/*@media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
-}
+}*/
 
 .content {
   margin-left: $side-width; /* Same as the width of the sidebar */

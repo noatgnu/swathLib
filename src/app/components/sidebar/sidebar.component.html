@@ -39,7 +39,7 @@
         </div>
 
         <div class="list-group sequence-list" *ngIf="fasta">
-          <a class="list-group-item list-group-item-action flex-column align-items-start" *ngFor="let p of fasta.content | paginate: {id: 'fastaContent', itemsPerPage: 8, currentPage: page, maxSize: 5}" (click)="selectSeq(p)">
+          <a class="list-group-item list-group-item-action flex-column align-items-start py-1" *ngFor="let p of fasta.content | paginate: {id: 'fastaContent', itemsPerPage: 10, currentPage: page, maxSize: 5}" (click)="selectSeq(p)">
             <app-query-sum
               [protein]="p">
             </app-query-sum>
