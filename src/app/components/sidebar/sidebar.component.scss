@@ -12,16 +12,29 @@
 }
 
 .sequence-list{
-  max-height: calc(100vh - 250px);
-  overflow-y: scroll;
+  max-height: calc(66vh);
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
+
+
 .side-footer {
-  height: 30px;
+  height: 80px;
   position: absolute;
   width: 100%;
   bottom: 0;
   list-style-type: none;
-  padding-bottom:5.5em;
+  opacity: 0.5;
+  //padding-bottom:5.5em;
+}
+
+.side-footer:hover {
+  opacity: 1;
+}
+
+@media screen and (max-height: 600px) {
+  .sequence-list {
+    max-height: calc(66vh - 80px);
+  }
 }

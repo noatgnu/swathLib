@@ -14,9 +14,9 @@
         <div class="text-center">
           <div class="card">
             <div class="card-body">
-              <div class="text-center">
+              <!--<div class="text-center">
                 <small class="text-muted" *ngIf="fasta; else noSeq">{{fasta.content.length}} Seq(s)</small>
-              </div>
+              </div>-->
               <div class="text-center">
                 <div class="btn-group btn-group-sm d-flex" role="group">
                   <button type="button" class="btn btn-danger w-100" (click)="clearSelection()">Clear</button>
@@ -34,17 +34,15 @@
         </div>
 
         <div class="list-group sequence-list" *ngIf="fasta">
-          <a class="list-group-item list-group-item-action flex-column align-items-start" *ngFor="let p of fasta.content | paginate: {id: 'fastaContent', itemsPerPage: 7, currentPage: page, maxSize: 5}" (click)="selectSeq(p)">
+          <a class="list-group-item list-group-item-action flex-column align-items-start" *ngFor="let p of fasta.content | paginate: {id: 'fastaContent', itemsPerPage: 8, currentPage: page, maxSize: 5}" (click)="selectSeq(p)">
             <app-query-sum
               [protein]="p">
             </app-query-sum>
           </a>
         </div>
         <div class="card side-footer">
-          <div class="card-body text-center">
-            <div class="btn-group btn-group-sm d-flex" role="group">
-              <button type="button" class="btn btn-success w-100" (click)="SendQueries()">Submit</button>
-            </div>
+          <div class="card-body text-center d-flex">
+            <button type="button" class="btn btn-success btn-sm w-100" (click)="SendQueries()">Submit</button>
           </div>
         </div>
       </div>

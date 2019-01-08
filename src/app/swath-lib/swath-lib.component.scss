@@ -24,3 +24,8 @@ li.sequence {
 /deep/ .modal-lg {
   max-width: 90%;
 }
+
+.query-set {
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+}
