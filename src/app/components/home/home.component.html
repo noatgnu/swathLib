@@ -25,26 +25,31 @@
         <div *ngIf="annoucement|async; let announcement" class="nav-item text-light">
           {{announcement}}
         </div>
+        <div *ngIf="finished" class="ml-2">
+          <button type="button" class="btn btn-block btn-success" (click)="downloadFile()"><span class="material-icons server-settings">save</span></button>
+        </div>
         <div *ngIf="serverStatus|async; let serverStatus" class="ml-2">
           <span class="badge badge-success" *ngIf="serverStatus==true">Connected</span>
         </div>
         <span class="ml-2">
-      <button type='button' class="btn btn-outline-light" (click)="OpenConnectorModal()"><span class="material-icons server-settings">dns</span></button>
-    </span>
+          <button type='button' class="btn btn-outline-light" (click)="OpenConnectorModal()"><span class="material-icons server-settings">dns</span></button>
+        </span>
       </div>
     </nav>
     <div class="card download-popup" [@openClose]="downloadPopupState" *ngIf="finished">
       <div class="card-body">
-
         <div class="card-text">
           <div class="row">
-            <div class="col-9">
+            <div class="col-8">
               <p *ngIf="finishedTime">
                 Query finished on {{finishedTime|date:'full'}}
               </p>
             </div>
-            <div class="col-3">
-              <button type="button" class="btn btn-block btn-primary save-button" (click)="downloadFile()"><span class="material-icons server-settings">save</span> Save</button>
+            <div class="col-2">
+              <button type="button" class="btn btn-block btn-success save-button" (click)="downloadFile()"><span class="material-icons server-settings">save</span> Save</button>
+            </div>
+            <div class="col-2">
+              <button type="button" class="btn btn-block btn-danger" (click)="changeState()">Close</button>
             </div>
           </div>
         </div>

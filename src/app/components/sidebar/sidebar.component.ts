@@ -129,6 +129,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.queryCollection = [];
     this.srs.resultCollection = [];
     this.anSer.Announce('Queries submitted. Waiting for processing...');
+    this.srs.UpdateFinishTrigger(false);
     //this.srs.UpdateSendTrigger(true);
     this.acceptedProtein = Array.from(this.helper.queryMap.values());
     for (const a of this.acceptedProtein) {
