@@ -21,17 +21,17 @@
 
 .side-footer {
   height: 80px;
-  position: absolute;
+  position: relative;
   width: 100%;
   bottom: 0;
   list-style-type: none;
-  opacity: 0.5;
+  //opacity: 0.5;
   //padding-bottom:5.5em;
 }
 
-.side-footer:hover {
+/*.side-footer:hover {
   opacity: 1;
-}
+}*/
 
 @media screen and (max-height: 600px) {
   .sequence-list {
