@@ -18,6 +18,7 @@ import {SwathLibHelperService} from '../helper/swath-lib-helper.service';
 import {UniprotService} from '../helper/uniprot.service';
 import {ElectronService} from '../providers/electron.service';
 import {FileService} from '../providers/file.service';
+import {DigestRule} from "../helper/digest-rule";
 
 @Component({
   selector: 'app-swath-lib',
@@ -40,7 +41,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   result: Observable<SwathResponse>;
   fastaContent: FastaFile;
   resultReader: Observable<DataStore>;
-  digestRules: Observable<any>;
+  digestRules: Observable<DigestRule[]>;
   outputSubscription: Subscription;
   rt = [];
   passForm: FormGroup;
@@ -58,6 +59,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   acceptTrack = 0;
   acceptedProtein = [];
   rtSub: Subscription;
+  batchDigestRule;
   constructor(private mod: SwathLibAssetService, private fastaFile: FastaFileService, private fb: FormBuilder,
               private srs: SwathResultService, private _fh: FileHandlerService, private anSer: AnnoucementService,
               private modalService: NgbModal, private swathHelper: SwathLibHelperService, private uniprot: UniprotService, private electron: ElectronService, private fileService: FileService) {
@@ -200,6 +202,15 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   acceptContent() {
     this.updateContent();
     this.modalService.dismissAll();
+  }
+
+  digestAllSelected(fasta: FastaFile) {
+    for (const a of fasta.content) {
+      if (this.digestMap[a.unique_id].accept) {
+        this.digestMap[a.unique_id].rules = this.batchDigestRule;
+        this.digest(a);
+      }
+    }
   }
 
   digest(protein: Protein) {

@@ -58,10 +58,12 @@
               </div>
             </div>
             <div class="row" *ngIf="extraForm.value['oxonium']">
-              Selected oxonium ions:
-              <ul>
-                <li *ngFor="let o of extraForm.value['oxonium']">{{o.components}}</li>
-              </ul>
+              <div *ngIf="extraForm.value['oxonium'].length > 0">
+                Selected oxonium ions:
+                <ul>
+                  <li *ngFor="let o of extraForm.value['oxonium']">{{o.components}}</li>
+                </ul>
+              </div>
             </div>
               <div class="row" *ngIf="query.b_stop_at>-1">
                   <small>

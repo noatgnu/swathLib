@@ -64,9 +64,24 @@
   <div class="modal-body">
 
     <div class="container-fluid">
-      <div class="pagination-control">
-        <pagination-controls id="inputFasta" (pageChange)="page = $event"></pagination-controls>
+      <div class="row">
+        <div class="pagination-control text-left col-8">
+          <pagination-controls id="inputFasta" (pageChange)="page = $event"></pagination-controls>
+        </div>
+        <div class="col-4 text-right" *ngIf="digestRules|async; let digestRules">
+          <div class="input-group">
+            <select class="custom-select" id="batchDigestRules" [(ngModel)]="batchDigestRule">
+              <option *ngFor="let d of digestRules" [ngValue]="d">
+                {{d.name}}
+              </option>
+            </select>
+            <span class="input-group-append">
+              <button type="button" class="btn btn-danger" (click)="digestAllSelected(fastaContent)">Digest Selected</button>
+            </span>
+          </div>
+        </div>
       </div>
+
       <ul class="list-group input-list">
         <li class="list-group-item list-group-item-secondary">
           <div class="row">
@@ -128,7 +143,7 @@
                       {{d.name}}
                     </option>
                   </select>
-                  <span class="input-group-btn">
+                  <span class="input-group-append">
                     <button type="button" class="btn btn-danger" (click)="digest(f)">Digest</button>
                   </span>
                 </div>

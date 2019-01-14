@@ -247,6 +247,9 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
 
   saveProtein() {
     this.query.protein.id = this.extraForm.value['name'];
+    this.query.windows = this.extraForm.value['windows'];
+    this.query.rt = this.extraForm.value['rt'];
+    this.query.oxonium = this.extraForm.value['oxonium'];
     this.modalref.close();
   }
 
