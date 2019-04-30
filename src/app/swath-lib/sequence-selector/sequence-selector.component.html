@@ -4,7 +4,7 @@
         <div class="row">
           <div class="col-6">
             <h5 class="card-title">
-              {{protein.id}}
+              {{query.protein.id}}
             </h5>
           </div>
           <div class="col-6">
@@ -29,67 +29,69 @@
                 <button class="dropdown-item" (click)="b_stop_at=aa.coordinate">Set b-series stop</button>
               </div>
             </div>-->
-            <app-seq-viewer [Seq]="seqCoord" [maxColumn]="20" [unique_id]="protein.unique_id" (contextEvent)="eventHandler($event)"></app-seq-viewer>
+            <app-seq-viewer [query]="query" [maxColumn]="20" [unique_id]="query.protein.unique_id" (contextEvent)="eventHandler($event)"></app-seq-viewer>
           </div>
           <div class="col-3">
             <div class="row mt-2 in-line form-inline">
-              <input type="checkbox" class="form-control form-control-sm" id="by_run" [(ngModel)]="by_run">
+              <input type="checkbox" class="form-control form-control-sm" id="by_run" [(ngModel)]="query.by_run">
               <label for="by_run"> <i>b,y</i>-run non-Ytype mods only</label>
             </div>
             <div class="row mt-2 in-line form-inline">
-              <input type="checkbox" class="form-control form-control-sm" id="oxonium_only" [(ngModel)]="oxonium_only">
+              <input type="checkbox" class="form-control form-control-sm" id="oxonium_only" [(ngModel)]="query.oxonium_only">
               <label for="oxonium_only"> Generate only for oxonium ion</label>
             </div>
-            <div *ngIf="modSummary.length > 0">
-              <div class="mt-2" *ngFor="let m of modSummary">
+            <div *ngIf="query.modifications.length > 0">
+              <div class="mt-2" *ngFor="let m of query.modifications">
                 <div class="row in-line" [ngSwitch]="m.type">
                   <span class="badge badge-pill badge-success" *ngSwitchCase="'Ytype'" (click)="selectCoordinates(m.positions)">{{m.name}} {{m.Ytype}}: {{m.positions.length}}</span>
                   <span class="badge badge-pill badge-primary" *ngSwitchCase="'variable'" (click)="selectCoordinates(m.positions)">{{m.name}} {{m.Ytype}}: {{m.positions.length}}</span>
                   <span class="badge badge-pill badge-warning" *ngSwitchCase="'static'" (click)="selectCoordinates(m.positions)">{{m.name}} {{m.Ytype}}: {{m.positions.length}}</span>
                 </div>
                 <div class="row mt-2 in-line form-inline" *ngIf="m.type=='Ytype'||m.type=='variable'">
-                  <input type="checkbox" class="form-control form-control-sm" id="status-filled-{{protein.id+m.label}}" #statusfilled (change)="changeStatus(statusfilled, m)" [checked]="m.status">
-                  <label for="status-filled-{{protein.id+m.label}}">Filled all positions</label>
+                  <input type="checkbox" class="form-control form-control-sm" id="status-filled-{{query.protein.id+m.label}}" #statusfilled (change)="changeStatus(statusfilled, m)" [checked]="m.status">
+                  <label for="status-filled-{{query.protein.id+m.label}}">Filled all positions</label>
                 </div>
                 <div class="row mt-2 in-line form-inline" *ngIf="m.type=='Ytype'||m.type=='variable'">
-                  <input type="checkbox" class="form-control form-control-sm" id="mp-{{protein.id+m.label}}" #mp (change)="changePattern(mp, m)" [checked]="m.multiple_pattern">
-                  <label for="mp-{{protein.id+m.label}}">Multiple Pattern</label>
+                  <input type="checkbox" class="form-control form-control-sm" id="mp-{{query.protein.id+m.label}}" #mp (change)="changePattern(mp, m)" [checked]="m.multiple_pattern">
+                  <label for="mp-{{query.protein.id+m.label}}">Multiple Pattern</label>
                 </div>
               </div>
             </div>
             <div class="row" *ngIf="extraForm.value['oxonium']">
-              Selected oxonium ions:
-              <ul>
-                <li *ngFor="let o of extraForm.value['oxonium']">{{o.components}}</li>
-              </ul>
+              <div *ngIf="extraForm.value['oxonium'].length > 0">
+                Selected oxonium ions:
+                <ul>
+                  <li *ngFor="let o of extraForm.value['oxonium']">{{o.components}}</li>
+                </ul>
+              </div>
             </div>
-              <div class="row" *ngIf="b_stop_at>-1">
+              <div class="row" *ngIf="query.b_stop_at>-1">
                   <small>
-                      b-series stopping at {{seqCoord[b_stop_at].aa}}{{b_stop_at+1}}
+                      b-series stopping at {{query.seqCoord[query.b_stop_at].aa}}{{query.b_stop_at+1}}
                   </small>
-                  <i class="fa fa-times-circle" (click)="b_stop_at=-1"></i>
+                  <i class="fa fa-times-circle" (click)="query.b_stop_at=-1"></i>
               </div>
-              <div class="row" *ngIf="b_selected.length > 0">
+              <div class="row" *ngIf="query.b_selected.length > 0">
                   <small>
-                      Selected for b-series: <span *ngFor="let s of b_selected">{{s+1}},</span>
+                      Selected for b-series: <span *ngFor="let s of query.b_selected">{{s+1}},</span>
                   </small>
               </div>
-              <div class="row" *ngIf="y_stop_at>-1">
+              <div class="row" *ngIf="query.y_stop_at>-1">
                   <small>
-                      y-series stopping at {{seqCoord[y_stop_at].aa}}{{y_stop_at+1}}
+                      y-series stopping at {{query.seqCoord[query.y_stop_at].aa}}{{query.y_stop_at+1}}
                   </small>
-                  <i class="fa fa-times-circle" (click)="y_stop_at=-1"></i>
+                  <i class="fa fa-times-circle" (click)="query.y_stop_at=-1"></i>
               </div>
-              <div class="row" *ngIf="y_selected.length > 0">
+              <div class="row" *ngIf="query.y_selected.length > 0">
                   <small>
-                      Selected for y-series: <span *ngFor="let s of y_selected">{{seqCoord.length - s}},</span>
+                      Selected for y-series: <span *ngFor="let s of query.y_selected">{{query.seqCoord.length - s}},</span>
                   </small>
               </div>
             <div class="text-right mt-4">
-              <input type="text" class="form-control form-control-sm" aria-label="ion-type" aria-describedby="ion-type" [(ngModel)]="protein.ion_type" placeholder="Ion Type">
+              <input type="text" class="form-control form-control-sm" aria-label="ion-type" aria-describedby="ion-type" [(ngModel)]="query.protein.ion_type" placeholder="Ion Type">
             </div>
             <div class="text-right mt-4">
-              <button type="button" class="btn btn-sm btn-warning" (click)="clearModifications()">Clear All Modifications</button>
+              <button type="button" class="btn btn-sm btn-warning" (click)="query.clearModifications()">Clear All Modifications</button>
             </div>
           </div>
         </div>
@@ -108,7 +110,7 @@
     </button>
   </div>
   <div class="modal-body">
-    <div *ngIf="currentCoord">
+    <div *ngIf="query.currentCoord">
       <div class="container">
         <div class="card">
           <div class="card-header">
@@ -116,14 +118,14 @@
           </div>
           <div class="card-body">
             <div class="card-text">
-              <strong>Position:</strong> {{currentCoord.coordinate + 1}}
+              <strong>Position:</strong> {{query.currentCoord.coordinate + 1}}
               <br/>
-              <strong>Residue:</strong> {{currentCoord.aa}}
+              <strong>Residue:</strong> {{query.currentCoord.aa}}
             </div>
           </div>
         </div>
         <div class="mt-2">
-          <div *ngFor="let m of currentCoord.mods">
+          <div *ngFor="let m of query.currentCoord.mods">
             <div class="card mt-1">
               <div class="card-body">
                 <h5 class="card-title">
@@ -144,14 +146,14 @@
                   </div>
                 </div>
                 <div class="text-right">
-                  <button type="button" class="btn btn-primary" (click)="removeModification(m)">Remove</button>
+                  <button type="button" class="btn btn-primary" (click)="query.removeModification(m)">Remove</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
         <div class="mt-2">
-          <button type="button" class="btn btn-outline-primary btn-lg btn-block" (click)="createFormPremade(); createForm(currentCoord.coordinate, currentCoord.aa);"><i class="fa fa-plus"></i></button>
+          <button type="button" class="btn btn-outline-primary btn-lg btn-block" (click)="createFormPremade(); createForm(query.currentCoord.coordinate, query.currentCoord.aa);">+</button>
           <div class="card mt-2" *ngIf="addModForm">
             <div class="card-body">
               <form [formGroup]="preMadeForm">
@@ -190,19 +192,15 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="name">Name</span>
                     </div>
-
                     <input formControlName="name" type="text" class="form-control" aria-label="name" aria-describedby="name">
-
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="mass">Mass</span>
-                      </div>
-
-                      <input formControlName="mass" type="text" class="form-control" aria-label="mass" aria-describedby="mass">
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="mass">Mass</span>
+                    </div>
+                    <input formControlName="mass" type="text" class="form-control" aria-label="mass" aria-describedby="mass">
                   </div>
                 </div>
                 <div class="form-group row">
@@ -210,14 +208,11 @@
                       <div class="input-group-prepend">
                           <span class="input-group-text" id="type">Modification type</span>
                       </div>
-
                     <select formControlName="type" class="form-control" aria-label="type" aria-describedby="type">
                       <option value="static">Static</option>
                       <option value="variable">Variable</option>
                       <option value="Ytype">Y-type</option>
                     </select>
-
-
                   </div>
                 </div>
                 <div class="form-group row">
@@ -231,28 +226,25 @@
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="label">Internal Modification Label</span>
-                      </div>
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="label">Internal Modification Label</span>
+                    </div>
                     <input formControlName="label" class="form-control" aria-label="label" aria-describedby="label">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="regex">Regex</span>
-                      </div>
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="regex">Regex</span>
+                    </div>
                     <input formControlName="regex" type="text" class="form-control" aria-label="regex" aria-describedby="regex">
                   </div>
                 </div>
                 <div class="form-group row">
                   <div class="input-group">
-                      <div class="input-group-prepend">
-                          <span class="input-group-text" id="status">Status</span>
-                      </div>
-
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="status">Status</span>
+                    </div>
                     <select formControlName="status" class="form-control" aria-label="status" aria-describedby="status">
                       <option value=false>False</option>
                       <option value=true>True</option>
@@ -316,6 +308,25 @@
             {{o.components}} ({{o.mz}} m/z)
           </option>
         </select>
+        <small class="text-muted">Current selection:<span *ngFor="let i of query.oxonium"> {{i.components}},</span></small>
+      </div>
+      <div class="form-group">
+        <label for="windows">SWATH Windows:</label>
+        <select multiple class="form-control" id="windows" formControlName="windows" *ngIf="windows|async; let windows">
+          <option *ngFor="let w of windows" [value]="w">
+            {{w.start}} - {{w.stop}}
+          </option>
+        </select>
+        <small class="text-muted">Current selection:<span *ngFor="let i of query.windows"> {{i.start}}-{{i.stop}},</span></small>
+      </div>
+      <div class="form-group">
+        <label for="rt">Retention Time:</label>
+        <select multiple class="form-control" id="rt" formControlName="rt" *ngIf="rt|async; let rt">
+          <option *ngFor="let r of rt" [value]="r">
+            {{r}}
+          </option>
+        </select>
+        <small class="text-muted">Current selection:<span *ngFor="let i of query.rt"> {{i}},</span></small>
       </div>
     </form>
   </div>

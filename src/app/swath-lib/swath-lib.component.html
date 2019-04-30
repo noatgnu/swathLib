@@ -1,85 +1,44 @@
-<div class="container-fluid">
-  <ngb-tabset>
-    <ngb-tab title="Main">
-      <ng-template ngbTabContent>
-        <div class="card mt-2">
-          <div class="card-body">
-            <div class="form-group">
-              <label for="FastaRaw">Fasta Content:</label>
-              <div>
-                <textarea class="form-control" id="FastaRaw" name="FastaRaw" [(ngModel)]="fastaRaw" required rows="2">
-              </textarea>
-              </div>
-
-            </div>
-            <h4 class="text-muted">
-              OR.
-            </h4>
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
-                  <span class="input-group-text" id="label-fasta-input">Fasta Input:</span>
-                </div>
-                <div class="custom-file">
-                  <input type="file" class="custom-file-input" aria-label="fasta-input" aria-describedby="label-fasta-input" (change)="handleFile($event)" required>
-                  <label class="custom-file-label" for="label-fasta-input">{{fileName||'Select File'}}</label>
-                </div>
-
-              </div>
-              <div *ngIf="fasta|async; let fasta">
-                <small id="peptide-summary-rows" class="form-text text-muted">
-                  {{fasta.content.length}} peptides have been loaded.
-                </small>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-9"></div>
-              <div class="col-3 text-right">
-                <button class="btn btn-primary" (click)="processFastaContent()">
-                  Process Input
-                </button>
-              </div>
-            </div>
-          </div>
+<div class="container-fluid query-set">
+  <div class="card mt-2">
+    <div class="card-body">
+      <div class="form-group">
+        <label for="FastaRaw">Fasta Content:</label>
+        <div>
+          <textarea class="form-control" id="FastaRaw" name="FastaRaw" [(ngModel)]="fastaRaw" required rows="2">
+          </textarea>
         </div>
-        <app-queryset-parameter-form (queryForm)="applyModification($event)" [rt]="rt"></app-queryset-parameter-form>
-      </ng-template>
-    </ngb-tab>
-    <ngb-tab title="Settings">
-      <ng-template ngbTabContent>
-        <app-user-settings (rt)="UpdateRT($event)"></app-user-settings>
-      </ng-template>
-    </ngb-tab>
-    <ngb-tab title="Help">
-      <ng-template ngbTabContent>
-        <app-swath-lib-help></app-swath-lib-help>
-      </ng-template>
-    </ngb-tab>
-  </ngb-tabset>
-</div>
-
-<div class="container-fluid mb-4" *ngIf="fasta|async; let fasta">
-  <hr/>
-  <app-sequence-selector *ngFor="let p of fasta.content" [protein]="p" [form]="passForm"></app-sequence-selector>
-
-  <div class="text-right mt-4">
-    <button type="button" class="btn btn-primary" [disabled]="collectTrigger" (click)="SendQueries()">Submit Queries</button>
-  </div>
-
-
-  <div class="text-right mt-4" *ngIf="finished">
-    <div class="row">
-      <div class="col-sm-8">
-        Query finished on {{finishedTime|date:'full'}}
       </div>
-      <div class="col-sm-4 text-right">
-        <button type="button" class="btn btn-success" (click)="downloadFile()">Save Compiled Results</button>
+      <h4 class="text-muted">
+        OR.
+      </h4>
+      <div class="form-group">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="label-fasta-input">Fasta Input:</span>
+          </div>
+          <div class="custom-file">
+            <input type="file" class="custom-file-input" aria-label="fasta-input" aria-describedby="label-fasta-input" (change)="handleFile($event)" required>
+            <label class="custom-file-label" for="label-fasta-input">{{fileName||'Select File'}}</label>
+          </div>
+
+        </div>
+        <div *ngIf="fasta|async; let fasta">
+          <small id="peptide-summary-rows" class="form-text text-muted">
+            {{fasta.content.length}} peptides have been loaded.
+          </small>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-9"></div>
+        <div class="col-3 text-right">
+          <button class="btn btn-primary" (click)="processFastaContent()">
+            Process Input
+          </button>
+        </div>
       </div>
     </div>
-
   </div>
-
-
+  <app-queryset-parameter-form (queryForm)="applyModification($event)" [rt]="rt" #queryForm></app-queryset-parameter-form>
 </div>
 
 <ng-template #loading>
@@ -105,7 +64,25 @@
   <div class="modal-body">
 
     <div class="container-fluid">
-      <ul class="list-group">
+      <div class="row">
+        <div class="pagination-control text-left col-8">
+          <pagination-controls id="inputFasta" (pageChange)="page = $event"></pagination-controls>
+        </div>
+        <div class="col-4 text-right" *ngIf="digestRules|async; let digestRules">
+          <div class="input-group">
+            <select class="custom-select" id="batchDigestRules" [(ngModel)]="batchDigestRule">
+              <option *ngFor="let d of digestRules" [ngValue]="d">
+                {{d.name}}
+              </option>
+            </select>
+            <span class="input-group-append">
+              <button type="button" class="btn btn-danger" (click)="digestAllSelected(fastaContent)">Digest Selected</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <ul class="list-group input-list">
         <li class="list-group-item list-group-item-secondary">
           <div class="row">
             <div class="col-1">
@@ -126,7 +103,7 @@
             </div>
           </div>
         </li>
-        <li class="list-group-item list-group-item{{colorMap.get(digestMap[f.unique_id].accept)}} list-group-item-action sequence" *ngFor="let f of fastaContent.content">
+        <li class="list-group-item list-group-item{{colorMap.get(digestMap[f.unique_id].accept)}} list-group-item-action sequence" *ngFor="let f of fastaContent.content  | paginate: {id: 'inputFasta', itemsPerPage: 5, currentPage: page}">
           <div class="row">
             <div class="col-1">
               <input type="checkbox" [(ngModel)]="digestMap[f.unique_id].accept" (change)="changeAccept(f.unique_id)">
@@ -166,7 +143,7 @@
                       {{d.name}}
                     </option>
                   </select>
-                  <span class="input-group-btn">
+                  <span class="input-group-append">
                     <button type="button" class="btn btn-danger" (click)="digest(f)">Digest</button>
                   </span>
                 </div>
@@ -178,16 +155,21 @@
     </div>
   </div>
   <div class="modal-footer">
-    <div class="input-group">
-      <select class="custom-select" id="filterRegex" [(ngModel)]="filterChoice">
-        <option *ngFor="let f of regexFilter" [ngValue]="f">{{f.name}}</option>
-      </select>
-      <span class="input-group-btn">
-        <button type="button" class="btn btn-danger" (click)="filterSeq()">Filter Selected</button>
+    <div class="col-5">
+      <div class="input-group">
+        <select class="custom-select" id="filterRegex" [(ngModel)]="filterChoice">
+          <option *ngFor="let f of regexFilter" [ngValue]="f">{{f.name}}</option>
+        </select>
+        <span class="input-group-append">
+        <button type="button" class="btn btn-sm btn-danger" (click)="filterSeq()">Filter Selected</button>
       </span>
+      </div>
     </div>
-    <button type="button" class="btn btn-warning ml-auto" (click)="fetchUniprot()">Fetch Uniprot Sequence</button>
-    <button type="button" class="btn btn-secondary" (click)="exportFasta()">Export Fasta File</button>
-    <button type="button" class="btn btn-primary" (click)="acceptContent()">Accept <span class="badge badge-light">{{acceptTrack}}</span></button>
+    <div class="col-7 text-right">
+      <button type="button" class="btn btn-warning mr-2" (click)="fetchUniprot()">Fetch Uniprot Sequence</button>
+      <button type="button" class="btn btn-secondary mr-2" (click)="exportFasta()">Export Fasta File</button>
+      <button type="button" class="btn btn-primary" (click)="acceptContent()">Accept <span class="badge badge-light">{{acceptTrack}}</span></button>
+    </div>
+
   </div>
 </ng-template>

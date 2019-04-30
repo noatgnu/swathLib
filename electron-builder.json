@@ -25,13 +25,13 @@
     "icon": "dist",
     "target": [
       "portable",
-        "msi"
+        "msi", "7z"
     ]
   },
   "mac": {
     "icon": "dist",
     "target": [
-      "dmg"
+      "dir"
     ]
   },
   "linux": {
@@ -40,5 +40,6 @@
       "AppImage"
     ]
   },
+
     "extraResources": ["**/backend/*"]
 }

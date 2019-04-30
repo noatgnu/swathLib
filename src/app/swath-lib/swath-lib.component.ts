@@ -2,7 +2,6 @@ import {Component, OnInit, AfterViewInit, OnDestroy, ViewChild} from '@angular/c
 import {FormBuilder, FormGroup} from '@angular/forms';
 import {SwathLibAssetService, SwathResponse} from '../helper/swath-lib-asset.service';
 import {Observable} from 'rxjs';
-import {VariableMod} from '../helper/variable-mod';
 import {Subject} from 'rxjs';
 import {FastaFileService} from '../helper/fasta-file.service';
 import {Modification} from '../helper/modification';
@@ -10,34 +9,28 @@ import {FastaFile} from '../helper/fasta-file';
 import {SwathQuery} from '../helper/swath-query';
 import {SwathResultService} from '../helper/swath-result.service';
 import {Subscription} from 'rxjs';
-import {SwathWindows} from '../helper/swath-windows';
-import {DataStore, Result} from '../helper/data-row';
+import {DataStore} from '../helper/data-row';
 import {FileHandlerService} from '../helper/file-handler.service';
-import {Oxonium} from '../helper/oxonium';
 import {AnnoucementService} from '../helper/annoucement.service';
-import * as TextEncoding from 'text-encoding';
-import {BaseUrl} from '../helper/base-url';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Protein} from '../helper/protein';
 import {SwathLibHelperService} from '../helper/swath-lib-helper.service';
-import {AARule, DigestRule} from '../helper/digest-rule';
 import {UniprotService} from '../helper/uniprot.service';
 import {ElectronService} from '../providers/electron.service';
 import {FileService} from '../providers/file.service';
+import {DigestRule} from "../helper/digest-rule";
 
 @Component({
   selector: 'app-swath-lib',
   templateUrl: './swath-lib.component.html',
   styleUrls: ['./swath-lib.component.scss'],
-  providers: [FastaFileService, UniprotService],
+  providers: [UniprotService],
 })
 export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('trypticDigest') trypticDigest;
+  @ViewChild('queryForm') queryForm;
   currentAllBoxes = true;
-  finishedTime;
   fileDownloader;
-  queryCollection: SwathQuery[] = [];
-  resultCollection: DataStore[] = [];
   form: FormGroup;
   ff;
   sf;
@@ -48,12 +41,10 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   result: Observable<SwathResponse>;
   fastaContent: FastaFile;
   resultReader: Observable<DataStore>;
-  digestRules: Observable<any>;
+  digestRules: Observable<DigestRule[]>;
   outputSubscription: Subscription;
-  collectTrigger = false;
   rt = [];
   passForm: FormGroup;
-  findf: DataStore;
   errSub: Subscription;
   fastaRaw = '';
   file;
@@ -67,6 +58,8 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   filterChoice;
   acceptTrack = 0;
   acceptedProtein = [];
+  rtSub: Subscription;
+  batchDigestRule;
   constructor(private mod: SwathLibAssetService, private fastaFile: FastaFileService, private fb: FormBuilder,
               private srs: SwathResultService, private _fh: FileHandlerService, private anSer: AnnoucementService,
               private modalService: NgbModal, private swathHelper: SwathLibHelperService, private uniprot: UniprotService, private electron: ElectronService, private fileService: FileService) {
@@ -82,6 +75,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     for (let i = 1; i <= 60; i++) {
       this.rt.push(i);
     }
+    this.swathHelper.updateRT(this.rt);
     this.fileDownloader = this._fh.saveFile;
     this.regexFilter = this.swathHelper.regexFilter;
   }
@@ -94,31 +88,16 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
       //'schulzlab.glycoproteo.me' +
       '/assets/StreamSaver.js/mitm.html');
     this._fh.mitmLocation();
+    this.rtSub = this.swathHelper.rtObservable.subscribe((data) => {
+      this.rt = data;
+    });
     console.log(this._fh.checkSaveStreamSupport());
 
     this.mod.getAssets('assets/digest_rules.json').subscribe((resp) => {
       this.mod.updateDigestRules(resp.body['data']);
     });
-    this.errSub = this.anSer.errorReader.subscribe((data) => {
-      if (data) {
-        this.anSer.Announce('Error.');
-        this.collectTrigger = false;
-      }
-    });
-    this.outputSubscription = this.resultReader.subscribe((data) => {
-      if (this.collectTrigger) {
-        this.resultCollection.push(data);
-        this.anSer.Announce(`Processed ${this.resultCollection.length} of ${this.acceptedProtein.length}`);
-        if (this.resultCollection.length === this.acceptedProtein.length) {
-          this.finishedTime = this.getCurrentDate();
-          this.finished = true;
-          this.collectTrigger = false;
-          this.anSer.Announce('All results have been collected.');
-        }
-      }
-    });
+
     this.uniprotSub = this.uniprot.UniprotResult.subscribe((data) => {
-      const resultMap = new Map<string, string>();
       if (data.DataFrame) {
         const seqColumn = data.DataFrame.columnMap.get('Sequence');
         const idColumn = data.DataFrame.columnMap.get('Entry');
@@ -133,6 +112,7 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     this.outputSubscription.unsubscribe();
     this.errSub.unsubscribe();
     this.uniprotSub.unsubscribe();
+    this.rtSub.unsubscribe();
   }
 
   createForm() {
@@ -154,17 +134,34 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   applyModification(form: FormGroup) {
     this.form = form;
     console.log(this.form);
+    this.swathHelper.SequenceMap = new Map();
+    this.swathHelper.queryMap = new Map<string, SwathQuery>();
     this.passForm = Object.create(this.form);
+    this.swathHelper.updateForm(this.form);
     this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, this.acceptedProtein));
   }
 
+  private updateContent() {
+    this.swathHelper.SequenceMap = new Map();
+    this.swathHelper.queryMap = new Map<string, SwathQuery>();
+    this.form = this.queryForm.form;
+    this.passForm = Object.create(this.form);
+    const accept = [];
+    for (const i of this.fastaContent.content) {
+      if (this.digestMap[i.unique_id].accept) {
+        if (i.sequence !== '') {
+          accept.push(i);
+        }
+      }
+    }
+    this.acceptedProtein = accept;
+    this.swathHelper.updateForm(this.form);
+    console.log(this.form);
+    this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, accept));
+  }
 
   ngAfterViewInit() {
 
-  }
-
-  getCurrentDate() {
-    return Date.now();
   }
 
   handleFile(e) {
@@ -180,89 +177,8 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private updateContent() {
-    this.passForm = Object.create(this.form);
-    const accept = [];
-    for (const i of this.fastaContent.content) {
-      if (this.digestMap[i.unique_id].accept) {
-        if (i.sequence !== '') {
-          accept.push(i);
-        }
-      }
-    }
-    this.acceptedProtein = accept;
-    this.fastaFile.UpdateFastaSource(new FastaFile(this.fastaContent.name, accept));
-  }
 
-  SendQueries() {
-    this.finished = false;
-    this.collectTrigger = true;
-    this.queryCollection = [];
-    this.resultCollection = [];
-    this.anSer.Announce('Queries submitted. Waiting for processing...');
-    this.srs.UpdateSendTrigger(true);
-  }
 
-  downloadFile() {
-    let count = 0;
-    if (window.location.protocol === 'file:') {
-      this.anSer.Announce('Saving...');
-      const picked = this.fileService.save('txt');
-      const fileWriter = this.electron.fs.createWriteStream(picked);
-      let writeHeader = false;
-      for (const r of this.resultCollection) {
-        count++;
-        if (r.header !== undefined) {
-          if (writeHeader === false) {
-            fileWriter.write(r.header.join('\t') + '\n');
-            writeHeader = true;
-          }
-          if (r.data.constructor === Array) {
-            if (r.data.length > 0) {
-              for (const row of r.data) {
-                if (row.row !== undefined) {
-                  fileWriter.write(row.row.join('\t') + '\n');
-                }
-              }
-            }
-          }
-        }
-      }
-      fileWriter.end();
-    } else if (this._fh.checkSaveStreamSupport()) {
-      this.anSer.Announce('Starting stream.');
-      const fileStream = this._fh.createSaveStream(`${this.fastaContent.name}_library.txt`);
-      const writer = fileStream.getWriter();
-      const encoder = new TextEncoding.TextEncoder;
-      let writeHeader = false;
-      for (const r of this.resultCollection) {
-        count++;
-        if (r.header !== undefined) {
-          if (writeHeader === false) {
-            const uint8array = encoder.encode(r.header.join('\t') + '\n');
-            writer.write(uint8array);
-            writeHeader = true;
-          }
-          if (r.data.constructor === Array) {
-            if (r.data.length > 0) {
-              for (const row of r.data) {
-                if (row.row !== undefined) {
-                  const uint8array = encoder.encode(row.row.join('\t') + '\n');
-                  writer.write(uint8array);
-                }
-              }
-            }
-          }
-        }
-      }
-      writer.close();
-    }
-    this.anSer.Announce('Finished.');
-  }
-
-  rounding(n: number): number {
-    return Math.round(n * 10000) / 10000;
-  }
 
   async processFastaContent() {
     console.log('started');
@@ -286,6 +202,15 @@ export class SwathLibComponent implements OnInit, AfterViewInit, OnDestroy {
   acceptContent() {
     this.updateContent();
     this.modalService.dismissAll();
+  }
+
+  digestAllSelected(fasta: FastaFile) {
+    for (const a of fasta.content) {
+      if (this.digestMap[a.unique_id].accept) {
+        this.digestMap[a.unique_id].rules = this.batchDigestRule;
+        this.digest(a);
+      }
+    }
   }
 
   digest(protein: Protein) {

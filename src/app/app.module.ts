@@ -39,6 +39,12 @@ import {AnnoucementService} from './helper/annoucement.service';
 import {SvgContextMenuService} from './helper/svg-context-menu.service';
 import {ConnectorComponent} from './components/connector/connector.component';
 import {QuerysetParameterFormComponent} from "./swath-lib/queryset-parameter-form/queryset-parameter-form.component";
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import {FastaFileService} from "./helper/fasta-file.service";
+import { QueryViewerComponent } from './swath-lib/query-viewer/query-viewer.component';
+import { QuerySumComponent } from './swath-lib/query-sum/query-sum.component';
+import {NgxPaginationModule} from "ngx-pagination";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -56,15 +62,20 @@ export function HttpLoaderFactory(http: HttpClient) {
     SequenceSelectorComponent,
     SeqViewerComponent,
     ConnectorComponent,
-      QuerysetParameterFormComponent
+    QuerysetParameterFormComponent,
+    SidebarComponent,
+    QueryViewerComponent,
+    QuerySumComponent
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     FormsModule,
     HttpClientModule,
     AppRoutingModule,
     ReactiveFormsModule,
     NgbModule,
+    NgxPaginationModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
@@ -87,6 +98,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     SvgAnnotationService,
     AnnoucementService,
     SvgContextMenuService,
+    FastaFileService
 
   ],
   bootstrap: [AppComponent]
