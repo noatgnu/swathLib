@@ -246,10 +246,26 @@ export class SequenceSelectorComponent implements OnInit, OnDestroy {
   }
 
   saveProtein() {
-    this.query.protein.id = this.extraForm.value['name'];
-    this.query.windows = this.extraForm.value['windows'];
-    this.query.rt = this.extraForm.value['rt'];
-    this.query.oxonium = this.extraForm.value['oxonium'];
+    if (this.extraForm.value['windows']) {
+      if (this.extraForm.value['windows'].length > 0) {
+        this.query.windows = this.extraForm.value['windows'];
+      }
+
+    }
+    if (this.extraForm.value['name']) {
+      this.query.protein.id = this.extraForm.value['name'];
+    }
+    if (this.extraForm.value['rt']) {
+      if (this.extraForm.value['rt'].length > 0) {
+        this.query.rt = this.extraForm.value['rt'];
+      }
+    }
+    if (this.extraForm.value['oxonium']) {
+      if (this.extraForm.value['oxonium'].length > 0) {
+        this.query.oxonium = this.extraForm.value['oxonium'];
+      }
+    }
+
     this.modalref.close();
   }
 

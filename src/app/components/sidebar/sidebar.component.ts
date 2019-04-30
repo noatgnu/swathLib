@@ -82,6 +82,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   SelectAll() {
+    this.clearSelection();
     for (const p of this.fasta.content) {
       this.selectSeq(p);
     }
